@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  base: '/v4/',
+  base: '/',
   output: 'static',
   integrations: [tailwind()],
 });

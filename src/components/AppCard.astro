@@ -15,13 +15,13 @@ const { pkg } = Astro.props;
 const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--community)';
 ---
 
-<a href={`/v4/packages/${pkg.slug}`} class="block h-full transition-colors duration-200" style="background: var(--bg-card); border: 1px solid var(--border); padding: 16px; outline: none; box-shadow: none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+<a href={`/packages/${pkg.slug}`} class="block h-full transition-colors duration-200" style="background: var(--bg-card); border: 1px solid var(--border); padding: 16px; outline: none; box-shadow: none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
   <div class="flex items-start gap-4 mb-3">
     <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
       <img
-        src={pkg.icon_url || '/v4/icon/kore-logo.svg'}
+        src={pkg.icon_url || '/icon/kore-logo.svg'}
         alt={pkg.name}
-        onerror="this.src='/v4/icon/kore-logo.svg'"
+        onerror="this.src='/icon/kore-logo.svg'"
         width="36"
         height="36"
         class="app-icon"

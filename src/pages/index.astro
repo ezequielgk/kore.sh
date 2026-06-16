@@ -9,11 +9,11 @@ import categories from '../data/categories.json';
   <!-- HERO -->
   <section class="py-16 px-4 text-center">
     <div class="flex flex-col items-center justify-center max-w-2xl mx-auto">
-      <img src="/v4/icon/kore-logo.svg" alt="KPM" width="56" height="56" class="mb-6" />
+      <img src="/icon/kore-logo.svg" alt="KPM" width="56" height="56" class="mb-6" />
       <h1 class="text-4xl font-semibold mb-4 text-[var(--text-primary)]">Kore</h1>
       <p class="text-lg text-[var(--text-secondary)] mb-8">Install any Linux app with one command.</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center w-full">
-        <a href="/v4/browse" class="px-6 py-2 font-medium text-[#0a0a0a] bg-[var(--accent)] hover:opacity-90 transition-opacity">Browse Packages</a>
+        <a href="/browse" class="px-6 py-2 font-medium text-[#0a0a0a] bg-[var(--accent)] hover:opacity-90 transition-opacity">Browse Packages</a>
         <a href="https://github.com/ezequielgk/Kore-Recipes" class="px-6 py-2 font-medium text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors" target="_blank">GitHub</a>
       </div>
     </div>
@@ -32,7 +32,7 @@ import categories from '../data/categories.json';
     <h2 class="text-xl font-semibold mb-6 pl-4 border-l-2 border-[var(--border)] text-[var(--text-primary)]">Categories</h2>
     <div class="flex flex-wrap gap-4">
       {categories.map((cat: any) => (
-        <a href={`/v4/browse?category=${cat.name}`} class="inline-flex items-center gap-2 px-3 py-1.5 text-sm transition-colors bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]">
+        <a href={`/browse?category=${cat.name}`} class="inline-flex items-center gap-2 px-3 py-1.5 text-sm transition-colors bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)]">
           {cat.name}
           <span class="text-xs text-[var(--text-muted)]">{cat.count}</span>
         </a>
@@ -55,11 +55,11 @@ import categories from '../data/categories.json';
       grid.innerHTML = shuffled.map((p: any) => {
         const originColor = p.origin === 'official' ? 'var(--official)' : 'var(--community)';
         return `
-          <a href="/v4/packages/${p.slug}" class="block h-full transition-colors duration-200 bg-[var(--bg-card)] p-4" style="border: 1px solid var(--border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <a href="/packages/${p.slug}" class="block h-full transition-colors duration-200 bg-[var(--bg-card)] p-4" style="border: 1px solid var(--border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
             <div class="flex items-start gap-4 mb-3">
               <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
                 <img src="${p.icon_url}" 
-                     onerror="this.src='/v4/icon/kore-logo.svg'"
+                     onerror="this.src='/icon/kore-logo.svg'"
                      width="36" height="36" alt="${p.name}" class="app-icon" style="width: 36px; height: 36px;" loading="lazy" />
               </div>
               <div class="flex-grow min-w-0">
