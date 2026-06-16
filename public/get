@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- PART 1: INITIALIZATION & GLOBAL VARIABLES ---
 PKG=""
 URL=""
 FORMAT=""
 
-# Parse arguments
-while [ "$#" -gt 0 ]; do
+# --- PART 2: ARGUMENT PARSING & VALIDATION ---
+while [[ "$#" -gt 0 ]]; do
   case $1 in
     --pkg) PKG="$2"; shift ;;
     --url) URL="$2"; shift ;;
@@ -17,110 +18,91 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ -z "$PKG" ] || [ -z "$URL" ] || [ -z "$FORMAT" ]; then
-  echo "Uso: curl -fsSL https://kore-sh.vercel.app/get | bash -s -- --pkg <package_name> --url <url> --format <format>"
+  echo "Use: curl -fsSL https://kore.sh/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
   exit 1
 fi
 
+# --- PART 3: ENVIRONMENT CONFIGURATION & PATHS ---
 ARCH="$(uname -m)"
 OS="$(uname -s)"
 KPM_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/kpm"
 KPM_BIN="${HOME}/.local/bin"
+APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+
+# --- PART 4: EXISTING INSTALLATION CHECK & INTERACTIVE MENU ---
+if [ -d "$KPM_DATA/install/$PKG" ] || [ -f "$KPM_BIN/$PKG" ]; then
+  echo "ℹ The package '$PKG' is already installed."
+  echo "  [1] Update / Reinstall"
+  echo "  [2] Uninstall"
+  echo "  [3] Cancel"
+  read -p "Select an option (1-3): " OPTION
+  
+  case "$OPTION" in
+    1)
+      echo "→ Proceeding with update/reinstall..."
+      rm -rf "$KPM_DATA/install/$PKG"
+      rm -f "$KPM_BIN/$PKG"
+      rm -f "$APPS_DIR/$PKG.desktop"
+      ;;
+    2)
+      echo "→ Uninstalling '$PKG'..."
+      rm -rf "$KPM_DATA/install/$PKG"
+      rm -f "$KPM_BIN/$PKG"
+      rm -f "$APPS_DIR/$PKG.desktop"
+      echo "✓ '$PKG' uninstalled successfully."
+      exit 0
+      ;;
+    *)
+      echo "✗ Operation cancelled."
+      exit 0
+      ;;
+  esac
+fi
+
+# --- PART 5: TEMPORARY WORKSPACE SETUP ---
 TMP_DIR="$(mktemp -d)"
 
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-# ---------------------------------------------------------
-# Interactive Menu Function (reads from /dev/tty)
-# ---------------------------------------------------------
-choose_menu() {
-  local prompt="$1"
-  shift
-  local options=("$@")
-  local selected=0
-  local key
+echo "→ Installing '$PKG' via Kore Catalog..."
 
-  printf "\n\033[0;36m%b\033[0m\n" "$prompt" >/dev/tty
-  printf "\033[s" >/dev/tty
-
-  while true; do
-    printf "\033[u" >/dev/tty
-    for i in "${!options[@]}"; do
-      if [ "$i" -eq "$selected" ]; then
-        printf "\033[36m> %s\033[0m\n" "${options[$i]}" >/dev/tty
-      else
-        printf "  %s\n" "${options[$i]}" >/dev/tty
-      fi
-    done
-
-    # Read key from /dev/tty
-    read -rsn1 key < /dev/tty || true
-    if [[ $key == $'\x1b' ]]; then
-      read -rsn2 key < /dev/tty || true
-      if [[ $key == '[A' ]]; then
-        ((selected--))
-        [ "$selected" -lt 0 ] && selected=$((${#options[@]} - 1))
-      elif [[ $key == '[B' ]]; then
-        ((selected++))
-        [ "$selected" -ge ${#options[@]} ] && selected=0
-      fi
-    elif [[ $key == "" ]]; then
-      break
-    fi
-  done
-  printf "\n" >/dev/tty
-  echo "$selected"
-}
-# ---------------------------------------------------------
-
-echo "→ Instalando '$PKG' via Kore Catalog..."
-
-# 3. Si es GitHub, resolver la última release via API
+# --- PART 6: URL RESOLUTION & DOWNLOADING ---
 if echo "$URL" | grep -q "github.com"; then
-  REPO="$(echo "$URL" | sed 's|https://github.com/||' | sed 's|/$||')"
-  
-  # Fetch all assets
-  API_RESPONSE="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
-  
-  # Extract assets matching basic linux terms
-  ASSETS=$(echo "$API_RESPONSE" \
+  REPO="$(echo "$URL" | sed 's|https://github.com/||')"
+  LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
     | grep '"browser_download_url"' \
-    | grep -i "linux\|x86_64\|$ARCH\|\.AppImage" \
-    | grep -v "\.sig\|\.sha\|\.asc\|\.rpm\|\.deb" \
-    | sed 's/.*": "\(.*\)".*/\1/' || true)
+    | grep -i "$ARCH\|x86_64\|linux" \
+    | grep -v "\.sig\|\.sha\|\.asc\|\.tar\.gz\|\.zip" \
+    | head -1 \
+    | sed 's/.*": "\(.*\)".*/\1/')"
+  
+  if [ -z "$LATEST" ]; then
+    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+      | grep '"browser_download_url"' \
+      | grep -i "linux" \
+      | grep -v "\.sig\|\.sha\|\.asc" \
+      | head -1 \
+      | sed 's/.*": "\(.*\)".*/\1/')"
+  fi
 
-  if [ -z "$ASSETS" ]; then
-    echo "✗ No se encontraron assets compatibles para Linux."
+  if [ -z "$LATEST" ]; then
+    echo "✗ No compatible asset found for $ARCH."
     exit 1
   fi
-
-  # Convert ASSETS string to array
-  mapfile -t ASSET_ARRAY <<< "$ASSETS"
-  
-  if [ "${#ASSET_ARRAY[@]}" -eq 1 ]; then
-    DOWNLOAD_URL="${ASSET_ARRAY[0]}"
-  else
-    # Ask the user which asset to download
-    asset_names=()
-    for a in "${ASSET_ARRAY[@]}"; do
-      asset_names+=("$(basename "$a")")
-    done
-    
-    idx=$(choose_menu "Múltiples assets encontrados. Selecciona el que deseas descargar:" "${asset_names[@]}")
-    DOWNLOAD_URL="${ASSET_ARRAY[$idx]}"
-  fi
-
+  DOWNLOAD_URL="$LATEST"
 else
   DOWNLOAD_URL="$URL"
 fi
 
-# 4. Descargar
-echo "→ Descargando desde $DOWNLOAD_URL..."
+echo "→ Fetching from $DOWNLOAD_URL..."
 FILENAME="$(basename "$DOWNLOAD_URL")"
 curl -fsSL --progress-bar "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"
 
-# 5. Extraer según formato
+# --- PART 7: EXTRACTION & APPIMAGE PROCESSING ---
 mkdir -p "$TMP_DIR/extracted"
+mkdir -p "$APPS_DIR"
+
 case "$FILENAME" in
   *.tar.gz|*.tgz) tar -xzf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
   *.tar.xz)       tar -xJf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
@@ -130,9 +112,21 @@ case "$FILENAME" in
     mkdir -p "$KPM_DATA/install/$PKG"
     cp "$TMP_DIR/$FILENAME" "$KPM_DATA/install/$PKG/$PKG.AppImage"
     chmod +x "$KPM_DATA/install/$PKG/$PKG.AppImage"
+    
     mkdir -p "$KPM_BIN"
     ln -sf "$KPM_DATA/install/$PKG/$PKG.AppImage" "$KPM_BIN/$PKG"
-    echo "✓ $PKG instalado. Ejecutá: $PKG"
+    
+    cat <<EOF > "$APPS_DIR/$PKG.desktop"
+[Desktop Entry]
+Name=$PKG
+Exec=$KPM_BIN/$PKG
+Icon=application-x-executable
+Type=Application
+Terminal=false
+Categories=Utility;
+EOF
+
+    echo "✓ $PKG Installation complete. Run: $PKG"
     exit 0
     ;;
   *) 
@@ -140,48 +134,58 @@ case "$FILENAME" in
     ;;
 esac
 
-# 6. Encontrar ejecutable principal
-mapfile -t EXECS < <(find "$TMP_DIR/extracted" -type f -executable | grep -v "\.so\|\.png\|\.svg\|\.desktop" || true)
+# --- PART 8: EXECUTABLE DISCOVERY (FOR ARCHIVES) ---
+EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
+  | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+  | head -1)"
 
-if [ "${#EXECS[@]}" -eq 0 ]; then
-  # Try again without executable flag
-  mapfile -t EXECS < <(find "$TMP_DIR/extracted" -type f | grep -v "\.so\|\.png\|\.svg\|\.desktop" || true)
-  if [ "${#EXECS[@]}" -eq 0 ]; then
-    echo "✗ No se encontró ejecutable en el paquete."
+if [ -z "$EXEC" ]; then
+  EXEC="$(find "$TMP_DIR/extracted" -type f \
+    | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+    | head -1)"
+  if [ -z "$EXEC" ]; then
+    echo "✗ No executable found in the package."
     exit 1
   fi
 fi
 
-if [ "${#EXECS[@]}" -eq 1 ]; then
-  EXEC="${EXECS[0]}"
-else
-  # Ask the user which executable to link
-  exec_names=()
-  for e in "${EXECS[@]}"; do
-    exec_names+=("$(basename "$e")")
-  done
-  
-  idx=$(choose_menu "Múltiples ejecutables encontrados. Selecciona el principal:" "${exec_names[@]}")
-  EXEC="${EXECS[$idx]}"
-fi
-
-# 7. Instalar
+# --- PART 9: FINAL INSTALLATION & DESKTOP ENTRY CONFIGURATION ---
 mkdir -p "$KPM_DATA/install/$PKG"
 cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
+chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
 
-REL_EXEC="${EXEC#$TMP_DIR/extracted/}"
-
-chmod +x "$KPM_DATA/install/$PKG/$REL_EXEC"
 mkdir -p "$KPM_BIN"
-ln -sf "$KPM_DATA/install/$PKG/$REL_EXEC" "$KPM_BIN/$PKG"
+ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" "$KPM_BIN/$PKG"
 
-# 8. Agregar ~/.local/bin al PATH si no está
+ICON_PATH=$(find "$KPM_DATA/install/$PKG" -type f \( -iname "*.png" -o -iname "*.svg" -o -iname "*.xpm" \) | head -1)
+
+if [ -n "$ICON_PATH" ]; then
+  DESKTOP_ICON="$ICON_PATH"
+else
+  DESKTOP_ICON="utilities-terminal"
+fi
+
+cat <<EOF > "$APPS_DIR/$PKG.desktop"
+[Desktop Entry]
+Name=$PKG
+Exec=$KPM_BIN/$PKG
+Icon=$DESKTOP_ICON
+Type=Application
+Terminal=false
+Categories=Utility;
+EOF
+
+# --- PART 10: POST-INSTALLATION CHECKS & CLEANUP ---
 if ! echo "$PATH" | grep -q "$KPM_BIN"; then
   echo ""
-  echo "⚠ Agregá esto a tu ~/.bashrc o ~/.zshrc:"
+  echo "⚠ Add this to your ~/.bashrc or ~/.zshrc:"
   echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
+if command -v update-desktop-database &>/dev/null; then
+  update-desktop-database "$APPS_DIR" 2>/dev/null
+fi
+
 echo ""
-echo "✓ $PKG instalado exitosamente."
-echo "  Ejecutá: $PKG"
+echo "✓ $PKG installed successfully (Launcher added)."
+echo "  Run: $PKG"
