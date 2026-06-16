@@ -39,6 +39,33 @@ import categories from '../data/categories.json';
       ))}
     </div>
   </section>
+
+  <!-- DOCUMENTATION -->
+  <section class="max-w-7xl mx-auto px-4 py-12 pt-0">
+    <h2 class="text-xl font-semibold mb-6 pl-4 border-l-2 border-[var(--official)] text-[var(--text-primary)]">Documentation</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Instalar KPM -->
+      <div class="bg-[var(--bg-card)] p-6" style="border: 1px solid var(--border);">
+        <h3 class="text-lg font-medium mb-3 text-[var(--text-primary)]">How to install KPM</h3>
+        <p class="text-sm text-[var(--text-secondary)] mb-4">KPM (Kore Package Manager) is the official CLI to install and manage all these applications.</p>
+        <div class="relative group">
+          <pre class="p-4 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ curl -fsSL https://kore-sh.vercel.app/install | bash</code></pre>
+        </div>
+      </div>
+
+      <!-- Desinstalar Standalone -->
+      <div class="bg-[var(--bg-card)] p-6" style="border: 1px solid var(--border);">
+        <h3 class="text-lg font-medium mb-3 text-[var(--text-primary)]">How to uninstall standalone apps</h3>
+        <p class="text-sm text-[var(--text-secondary)] mb-4">If you installed an app without KPM (using the standalone script), you can remove it by deleting its files:</p>
+        <div class="relative group">
+          <pre class="p-4 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ rm -rf ~/.local/share/kpm/install/&lt;app_name&gt;
+$ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
 </Layout>
 
 <script>
