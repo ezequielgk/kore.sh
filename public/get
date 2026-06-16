@@ -6,7 +6,7 @@ URL=""
 FORMAT=""
 
 # Parse arguments
-while [[ "$#" -gt 0 ]]; do
+while [ "$#" -gt 0 ]; do
   case $1 in
     --pkg) PKG="$2"; shift ;;
     --url) URL="$2"; shift ;;
@@ -17,7 +17,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ -z "$PKG" ] || [ -z "$URL" ] || [ -z "$FORMAT" ]; then
-  echo "Uso: curl -fsSL https://kore.sh/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
+  echo "Uso: curl -fsSL https://kore-sh.vercel.app/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
   exit 1
 fi
 
