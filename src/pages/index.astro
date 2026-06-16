@@ -50,7 +50,8 @@ import categories from '../data/categories.json';
         <h3 class="text-lg font-medium mb-3 text-[var(--text-primary)]">How to install KPM</h3>
         <p class="text-sm text-[var(--text-secondary)] mb-4">KPM (Kore Package Manager) is the official CLI to install and manage all these applications.</p>
         <div class="relative group">
-          <pre class="p-4 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ curl -fsSL https://kore-sh.vercel.app/install | bash</code></pre>
+          <pre class="p-4 pr-16 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ curl -fsSL https://kore-sh.vercel.app/install | bash</code></pre>
+          <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd="curl -fsSL https://kore-sh.vercel.app/install | bash">Copy</button>
         </div>
       </div>
 
@@ -58,9 +59,15 @@ import categories from '../data/categories.json';
       <div class="bg-[var(--bg-card)] p-6" style="border: 1px solid var(--border);">
         <h3 class="text-lg font-medium mb-3 text-[var(--text-primary)]">How to uninstall standalone apps</h3>
         <p class="text-sm text-[var(--text-secondary)] mb-4">If you installed an app without KPM (using the standalone script), you can remove it by deleting its files:</p>
+        
+        <div class="relative group mb-3">
+          <pre class="p-4 pr-16 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ rm -rf ~/.local/share/kpm/install/&lt;app_name&gt;</code></pre>
+          <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd="rm -rf ~/.local/share/kpm/install/<app_name>">Copy</button>
+        </div>
+        
         <div class="relative group">
-          <pre class="p-4 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ rm -rf ~/.local/share/kpm/install/&lt;app_name&gt;
-$ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
+          <pre class="p-4 pr-16 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
+          <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd="rm ~/.local/bin/<app_name>">Copy</button>
         </div>
       </div>
 
@@ -85,7 +92,7 @@ $ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
           <a href="/packages/${p.slug}" class="block h-full transition-colors duration-200 bg-[var(--bg-card)] p-4" style="border: 1px solid var(--border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
             <div class="flex items-start gap-4 mb-3">
               <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
-                <img src="${p.icon_url}" 
+                 <img src="${p.icon_url}" 
                      onerror="this.src='/icon/kore-logo.svg'"
                      width="36" height="36" alt="${p.name}" class="app-icon" style="width: 36px; height: 36px;" loading="lazy" />
               </div>
@@ -103,6 +110,30 @@ $ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
         `;
       }).join('');
     }
+
+    // Copy logic
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const button = e.currentTarget as HTMLButtonElement;
+        const cmd = button.getAttribute('data-cmd');
+        if (cmd) {
+          try {
+            await navigator.clipboard.writeText(cmd);
+            const originalHTML = button.innerHTML;
+            button.innerHTML = 'Copied!';
+            button.style.color = 'var(--accent)';
+            button.style.borderColor = 'var(--accent)';
+            setTimeout(() => {
+              button.innerHTML = originalHTML;
+              button.style.color = 'var(--text-muted)';
+              button.style.borderColor = 'var(--border)';
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy text: ', err);
+          }
+        }
+      });
+    });
   });
 </script>
 
