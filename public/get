@@ -17,7 +17,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ -z "$PKG" ] || [ -z "$URL" ] || [ -z "$FORMAT" ]; then
-  echo "Uso: curl -fsSL https://kore-sh.vercel.app/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
+  echo "Uso: curl -fsSL https://kore-sh.vercel.app/get | bash -s -- --pkg <package_name> --url <url> --format <format>"
   exit 1
 fi
 
@@ -30,33 +30,86 @@ TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
+# ---------------------------------------------------------
+# Interactive Menu Function (reads from /dev/tty)
+# ---------------------------------------------------------
+choose_menu() {
+  local prompt="$1"
+  shift
+  local options=("$@")
+  local selected=0
+  local key
+
+  printf "\n\033[0;36m%b\033[0m\n" "$prompt" >/dev/tty
+  printf "\033[s" >/dev/tty
+
+  while true; do
+    printf "\033[u" >/dev/tty
+    for i in "${!options[@]}"; do
+      if [ "$i" -eq "$selected" ]; then
+        printf "\033[36m> %s\033[0m\n" "${options[$i]}" >/dev/tty
+      else
+        printf "  %s\n" "${options[$i]}" >/dev/tty
+      fi
+    done
+
+    # Read key from /dev/tty
+    read -rsn1 key < /dev/tty || true
+    if [[ $key == $'\x1b' ]]; then
+      read -rsn2 key < /dev/tty || true
+      if [[ $key == '[A' ]]; then
+        ((selected--))
+        [ "$selected" -lt 0 ] && selected=$((${#options[@]} - 1))
+      elif [[ $key == '[B' ]]; then
+        ((selected++))
+        [ "$selected" -ge ${#options[@]} ] && selected=0
+      fi
+    elif [[ $key == "" ]]; then
+      break
+    fi
+  done
+  printf "\n" >/dev/tty
+  echo "$selected"
+}
+# ---------------------------------------------------------
+
 echo "→ Instalando '$PKG' via Kore Catalog..."
 
 # 3. Si es GitHub, resolver la última release via API
 if echo "$URL" | grep -q "github.com"; then
   REPO="$(echo "$URL" | sed 's|https://github.com/||' | sed 's|/$||')"
-  LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-    | grep '"browser_download_url"' \
-    | grep -i "$ARCH\|x86_64\|linux" \
-    | grep -v "\.sig\|\.sha\|\.asc\|\.tar\.gz\|\.zip" \
-    | head -1 \
-    | sed 's/.*": "\(.*\)".*/\1/')"
   
-  if [ -z "$LATEST" ]; then
-    # Fallback to source/tarball if the specific arch binary isn't found easily in the first try
-    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-      | grep '"browser_download_url"' \
-      | grep -i "linux" \
-      | grep -v "\.sig\|\.sha\|\.asc" \
-      | head -1 \
-      | sed 's/.*": "\(.*\)".*/\1/')"
-  fi
+  # Fetch all assets
+  API_RESPONSE="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
+  
+  # Extract assets matching basic linux terms
+  ASSETS=$(echo "$API_RESPONSE" \
+    | grep '"browser_download_url"' \
+    | grep -i "linux\|x86_64\|$ARCH\|\.AppImage" \
+    | grep -v "\.sig\|\.sha\|\.asc\|\.rpm\|\.deb" \
+    | sed 's/.*": "\(.*\)".*/\1/' || true)
 
-  if [ -z "$LATEST" ]; then
-    echo "✗ No se encontró un asset compatible para $ARCH."
+  if [ -z "$ASSETS" ]; then
+    echo "✗ No se encontraron assets compatibles para Linux."
     exit 1
   fi
-  DOWNLOAD_URL="$LATEST"
+
+  # Convert ASSETS string to array
+  mapfile -t ASSET_ARRAY <<< "$ASSETS"
+  
+  if [ "${#ASSET_ARRAY[@]}" -eq 1 ]; then
+    DOWNLOAD_URL="${ASSET_ARRAY[0]}"
+  else
+    # Ask the user which asset to download
+    asset_names=()
+    for a in "${ASSET_ARRAY[@]}"; do
+      asset_names+=("$(basename "$a")")
+    done
+    
+    idx=$(choose_menu "Múltiples assets encontrados. Selecciona el que deseas descargar:" "${asset_names[@]}")
+    DOWNLOAD_URL="${ASSET_ARRAY[$idx]}"
+  fi
+
 else
   DOWNLOAD_URL="$URL"
 fi
@@ -83,25 +136,33 @@ case "$FILENAME" in
     exit 0
     ;;
   *) 
-    # Attempt to treat it as a direct executable if it's not a known archive
     cp "$TMP_DIR/$FILENAME" "$TMP_DIR/extracted/$PKG"
     ;;
 esac
 
 # 6. Encontrar ejecutable principal
-EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
-  | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
-  | head -1)"
+mapfile -t EXECS < <(find "$TMP_DIR/extracted" -type f -executable | grep -v "\.so\|\.png\|\.svg\|\.desktop" || true)
 
-if [ -z "$EXEC" ]; then
-  # Try to find any file if not executable (maybe missed perms)
-  EXEC="$(find "$TMP_DIR/extracted" -type f \
-    | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
-    | head -1)"
-  if [ -z "$EXEC" ]; then
+if [ "${#EXECS[@]}" -eq 0 ]; then
+  # Try again without executable flag
+  mapfile -t EXECS < <(find "$TMP_DIR/extracted" -type f | grep -v "\.so\|\.png\|\.svg\|\.desktop" || true)
+  if [ "${#EXECS[@]}" -eq 0 ]; then
     echo "✗ No se encontró ejecutable en el paquete."
     exit 1
   fi
+fi
+
+if [ "${#EXECS[@]}" -eq 1 ]; then
+  EXEC="${EXECS[0]}"
+else
+  # Ask the user which executable to link
+  exec_names=()
+  for e in "${EXECS[@]}"; do
+    exec_names+=("$(basename "$e")")
+  done
+  
+  idx=$(choose_menu "Múltiples ejecutables encontrados. Selecciona el principal:" "${exec_names[@]}")
+  EXEC="${EXECS[$idx]}"
 fi
 
 # 7. Instalar

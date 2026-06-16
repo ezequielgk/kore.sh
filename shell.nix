@@ -3,7 +3,8 @@
 pkgs.mkShell {
   buildInputs = [
     pkgs.nodejs_22
-    pkgs.tree
+    pkgs.tree 
+    pkgs.fzf
   ];
 
   shellHook = ''

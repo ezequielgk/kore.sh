@@ -25,7 +25,7 @@ const { pkg } = Astro.props;
 const format = pkg.formats && pkg.formats.length > 0 ? pkg.formats[0] : 'tarball';
 
 const kpmCmd = `$ kpm install ${pkg.package_name}`;
-const standaloneCmd = `$ curl -fsSL https://kore-sh.vercel.app/get | sh -s -- --pkg "${pkg.package_name}" --url "${pkg.url_template}" --format "${format}"`;
+const standaloneCmd = `$ curl -fsSL https://kore-sh.vercel.app/get | bash -s -- --pkg "${pkg.package_name}" --url "${pkg.url_template}" --format "${format}"`;
 const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--community)';
 ---
 
