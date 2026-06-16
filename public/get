@@ -137,12 +137,12 @@ esac
 
 # --- PART 8: EXECUTABLE DISCOVERY (FOR ARCHIVES) ---
 EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
-  | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+  | grep -v -E "\.so$|\.png$|\.svg$|\.desktop$|\.md$|\.txt$" \
   | head -1)"
 
 if [ -z "$EXEC" ]; then
   EXEC="$(find "$TMP_DIR/extracted" -type f \
-    | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+    | grep -v -E "\.so$|\.png$|\.svg$|\.desktop$|\.md$|\.txt$" \
     | head -1)"
   if [ -z "$EXEC" ]; then
     echo "✗ No executable found in the package."
@@ -150,13 +150,20 @@ if [ -z "$EXEC" ]; then
   fi
 fi
 
+# Calculate relative path of the executable inside the extracted folder
+REL_EXEC="${EXEC#$TMP_DIR/extracted/}"
+
 # --- PART 9: FINAL INSTALLATION & DESKTOP ENTRY CONFIGURATION ---
 mkdir -p "$KPM_DATA/install/$PKG"
-cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
-chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
+# Use cp -a to preserve permissions and folder structure perfectly
+cp -a "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
+
+# Target executable using the exact relative path
+TARGET_EXEC="$KPM_DATA/install/$PKG/$REL_EXEC"
+chmod +x "$TARGET_EXEC"
 
 mkdir -p "$KPM_BIN"
-ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" "$KPM_BIN/$PKG"
+ln -sf "$TARGET_EXEC" "$KPM_BIN/$PKG"
 
 ICON_PATH=$(find "$KPM_DATA/install/$PKG" -type f \( -iname "*.png" -o -iname "*.svg" -o -iname "*.xpm" \) | head -1)
 
