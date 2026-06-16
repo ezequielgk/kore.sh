@@ -83,31 +83,31 @@ if echo "$URL" | grep -q "github.com"; then
     FORMAT_FILTER="." # Fallback: match anything if format is unknown
   fi
 
-  # 1st attempt: Match Format + Architecture + "linux"
+  # 1st attempt: Match Format + Architecture + "linux" (Adding || true to prevent script crash on no match)
   LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
     | grep '"browser_download_url"' \
     | grep -i "$FORMAT_FILTER" \
     | grep -i "$ARCH\|x86_64\|linux" \
     | head -1 \
-    | sed 's/.*": "\(.*\)".*/\1/')"
+    | sed 's/.*": "\(.*\)".*/\1/' || true)"
   
-  # 2nd attempt: Match Format + "linux" (if arch is not explicitly in the filename)
+  # 2nd attempt: Match Format + "linux"
   if [ -z "$LATEST" ]; then
     LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
       | grep '"browser_download_url"' \
       | grep -i "$FORMAT_FILTER" \
       | grep -i "linux" \
       | head -1 \
-      | sed 's/.*": "\(.*\)".*/\1/')"
+      | sed 's/.*": "\(.*\)".*/\1/' || true)"
   fi
 
-  # 3rd attempt: Match Format only (last resort)
+  # 3rd attempt: Match Format only
   if [ -z "$LATEST" ]; then
     LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
       | grep '"browser_download_url"' \
       | grep -i "$FORMAT_FILTER" \
       | head -1 \
-      | sed 's/.*": "\(.*\)".*/\1/')"
+      | sed 's/.*": "\(.*\)".*/\1/' || true)"
   fi
 
   if [ -z "$LATEST" ]; then
