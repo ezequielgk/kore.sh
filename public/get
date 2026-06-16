@@ -71,24 +71,47 @@ echo "→ Installing '$PKG' via Kore Catalog..."
 # --- PART 6: URL RESOLUTION & DOWNLOADING ---
 if echo "$URL" | grep -q "github.com"; then
   REPO="$(echo "$URL" | sed 's|https://github.com/||')"
+  
+  # Determine format filter based on the --format argument
+  if [ "$FORMAT" = "appimage" ]; then
+    FORMAT_FILTER="\.AppImage"
+  elif [ "$FORMAT" = "tarball" ]; then
+    FORMAT_FILTER="\.tar\.gz\|\.tar\.xz\|\.tar\.bz2\|\.tgz"
+  elif [ "$FORMAT" = "zip" ]; then
+    FORMAT_FILTER="\.zip"
+  else
+    FORMAT_FILTER="." # Fallback: match anything if format is unknown
+  fi
+
+  # 1st attempt: Match Format + Architecture + "linux"
   LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
     | grep '"browser_download_url"' \
+    | grep -i "$FORMAT_FILTER" \
     | grep -i "$ARCH\|x86_64\|linux" \
-    | grep -v "\.sig\|\.sha\|\.asc\|\.tar\.gz\|\.zip" \
     | head -1 \
     | sed 's/.*": "\(.*\)".*/\1/')"
   
+  # 2nd attempt: Match Format + "linux" (if arch is not explicitly in the filename)
   if [ -z "$LATEST" ]; then
     LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
       | grep '"browser_download_url"' \
+      | grep -i "$FORMAT_FILTER" \
       | grep -i "linux" \
-      | grep -v "\.sig\|\.sha\|\.asc" \
+      | head -1 \
+      | sed 's/.*": "\(.*\)".*/\1/')"
+  fi
+
+  # 3rd attempt: Match Format only (last resort)
+  if [ -z "$LATEST" ]; then
+    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+      | grep '"browser_download_url"' \
+      | grep -i "$FORMAT_FILTER" \
       | head -1 \
       | sed 's/.*": "\(.*\)".*/\1/')"
   fi
 
   if [ -z "$LATEST" ]; then
-    echo "✗ No compatible asset found for $ARCH."
+    echo "✗ No compatible asset found for format '$FORMAT' and architecture '$ARCH'."
     exit 1
   fi
   DOWNLOAD_URL="$LATEST"
