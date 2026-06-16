@@ -1,0 +1,867 @@
+[
+  {
+    "name": "Antigravity",
+    "package_name": "antigravity",
+    "slug": "antigravity",
+    "url_template": "https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/$ag_ver/linux-x64/Antigravity.tar.gz",
+    "description": "Powerful agentic AI coding assistant designed by Google Deepmind.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Development",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Google Antigravity",
+      "license": "Unknown"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "JetBrains Toolbox",
+    "package_name": "jetbrains-toolbox",
+    "slug": "jetbrains-toolbox",
+    "url_template": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-$jb_ver.tar.gz",
+    "description": "A central dashboard to manage JetBrains IDEs, updates, and projects effortlessly.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Development",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "JetBrains",
+      "license": "Unknown"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Sublime Text",
+    "package_name": "sublime-text",
+    "slug": "sublime-text",
+    "url_template": "https://download.sublimetext.com/sublime_text_build_$st_build_x64.tar.xz",
+    "description": "A sophisticated text editor for code, markup, and prose with ultra-fast performance.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Development",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Sublime Text",
+      "license": "Unknown"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Heroic Games Launcher",
+    "package_name": "heroic-games-launcher",
+    "slug": "heroic-games-launcher",
+    "url_template": "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher",
+    "description": "An open-source game launcher for Epic Games, GOG, and Amazon Games on Linux.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Heroic Games Launcher",
+      "license": " GPL-3.0 license"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Pinecone Launcher",
+    "package_name": "pinecone-launcher",
+    "slug": "pinecone-launcher",
+    "url_template": "https://github.com/ElyPrismLauncher/Launcher",
+    "description": "A specialized fork of Prism Launcher optimized for specific community features and modpacks.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "ElyPrismLauncher",
+      "license": "GPL-3.0"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Prism Launcher",
+    "package_name": "prism-launcher",
+    "slug": "prism-launcher",
+    "url_template": "https://github.com/PrismLauncher/PrismLauncher",
+    "description": "A custom Minecraft launcher that allows you to easily manage multiple installations and mods.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "PrismLauncher",
+      "license": "GPL-3.0"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Red Eclipse",
+    "package_name": "redeclipse",
+    "slug": "redeclipse",
+    "url_template": "https://github.com/redeclipse/base",
+    "description": "An open-source sci-fi first-person shooter, forked from Cube 2: Sauerbraten.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "redeclipse",
+      "license": "Unknown"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "SuperTux",
+    "package_name": "supertux",
+    "slug": "supertux",
+    "url_template": "https://github.com/supertux/supertux",
+    "description": "SuperTux is a jump'n'run game with strong inspiration from the Super Mario Bros. games for the various Nintendo platforms.",
+    "terminal": false,
+    "formats": [
+      "appimage"
+    ],
+    "category": "Games",
+    "icon_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/SuperTux_Icon_2021.png",
+    "screenshots": [
+      "https://www.supertux.org/images/0_7_0/github_preview.png"
+    ],
+    "metadata": {
+      "maintainer": "Supertux Organization",
+      "license": "GPL-3.0 license"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "SuperTuxKart",
+    "package_name": "supertuxkart",
+    "slug": "supertuxkart",
+    "url_template": "https://github.com/supertuxkart/stk-code",
+    "description": "A 3D open-source arcade racer with a variety of characters, tracks, and modes.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Supertuxkart",
+      "license": "GNU General Public License (GNU GPL)"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Trinity Launcher",
+    "package_name": "trinity-launcher",
+    "slug": "trinity-launcher",
+    "url_template": "https://github.com/Trinity-LA/Trinity-Launcher",
+    "description": "A powerful and lightweight custom launcher for your games.",
+    "terminal": false,
+    "formats": [
+      "appimage"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Trinity-LA",
+      "license": "BSD-3-Clause license"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Xonotic",
+    "package_name": "xonotic",
+    "slug": "xonotic",
+    "url_template": "https://dl.xonotic.org/xonotic-0.8.6.zip",
+    "description": "A free and open-source first-person shooter forked from the Darkplaces Quake source-port.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Games",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Xonotic",
+      "license": "GPL-3.0"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Blender",
+    "package_name": "blender",
+    "slug": "blender",
+    "url_template": "https://mirrors.dotsrc.org/blender/release/$blender_major/blender-$blender_ver-linux-x64.tar.xz",
+    "description": "The free and open source 3D creation suite, supporting the entirety of the 3D pipeline.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Graphics",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Blender",
+      "license": "GPL-3.0"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Telegram",
+    "package_name": "telegram",
+    "slug": "telegram",
+    "url_template": "https://github.com/telegramdesktop/tdesktop",
+    "description": "Fast and secure desktop messaging app, seamlessly synced between devices.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Internet",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "telegramdesktop",
+      "license": "GNU GENERAL PUBLIC LICENSE"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Reaper",
+    "package_name": "reaper",
+    "slug": "reaper",
+    "url_template": "https://www.reaper.fm/files/7.x/reaper769_linux_x86_64.tar.xz",
+    "description": "A complete digital audio production application offering full multitrack audio and MIDI recording.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Music",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Unknown",
+      "license": "Unknown"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Youtube Music",
+    "package_name": "youtube-music",
+    "slug": "youtube-music",
+    "url_template": "https://github.com/pear-devs/pear-desktop",
+    "description": "Desktop client for YouTube Music with integrated media keys and background playback.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Music",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Pear-devs",
+      "license": "MIT"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "LocalSend",
+    "package_name": "localsend",
+    "slug": "localsend",
+    "url_template": "https://github.com/localsend/localsend",
+    "description": "An open-source cross-platform alternative to AirDrop for sharing files over the local network.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "localsend",
+      "license": " Apache-2.0 license"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Tor Browser",
+    "package_name": "tor-browser",
+    "slug": "tor-browser",
+    "url_template": "https://www.torproject.org/dist/torbrowser/$tor_ver/tor-browser-linux-x86_64-$tor_ver.tar.xz",
+    "description": "Privacy-focused browser that protects you against tracking, surveillance, and censorship.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Tor Project",
+      "license": "Mozilla Public License, Versión 2.0 (MPL-2.0)"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Tor Expert Bundle",
+    "package_name": "tor-expert-bundle",
+    "slug": "tor-expert-bundle",
+    "url_template": "https://archive.torproject.org/tor-package-archive/torbrowser/$tor_ver/tor-expert-bundle-linux-x86_64-$tor_ver.tar.gz",
+    "description": "The Tor binary and supporting files, without the graphical browser interface.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Tor Project",
+      "license": "Mozilla Public License, Versión 2.0 (MPL-2.0)."
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Bottom",
+    "package_name": "bottom",
+    "slug": "bottom",
+    "url_template": "https://github.com/ClementTsang/bottom",
+    "description": "A customizable cross-platform graphical system monitor for the terminal.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "ClementTsang",
+      "license": "MIT"
+    },
+    "origin": "community"
+  },
+  {
+    "name": "Helix",
+    "package_name": "helix",
+    "slug": "helix",
+    "url_template": "https://github.com/helix-editor/helix",
+    "description": "A post-modern modal text editor written in Rust with built-in LSP support.",
+    "terminal": true,
+    "formats": [
+      "tarball",
+      "appimage"
+    ],
+    "category": "Development",
+    "icon_url": "https://raw.githubusercontent.com/helix-editor/helix/8c41b11607924f7584b77c8a6e6b16439a2f559f/logo.svg",
+    "screenshots": [
+      "https://raw.githubusercontent.com/helix-editor/helix/refs/heads/master/screenshot.png"
+    ],
+    "metadata": {
+      "maintainer": "The Helix Team",
+      "license": "MPL-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Micro",
+    "package_name": "micro",
+    "slug": "micro",
+    "url_template": "https://github.com/micro-editor/micro",
+    "description": "A modern and intuitive terminal-based text editor with mouse support and intuitive shortcuts.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Development",
+    "icon_url": "https://raw.githubusercontent.com/micro-editor/micro/253065a4af5a417e3b13d62ec5f5f722457f4a53/assets/micro-logo-mark.svg",
+    "screenshots": [
+      "https://raw.githubusercontent.com/micro-editor/micro/refs/heads/master/assets/micro-solarized.png"
+    ],
+    "metadata": {
+      "maintainer": "micro-editor",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Neovim",
+    "package_name": "nvim",
+    "slug": "nvim",
+    "url_template": "https://github.com/neovim/neovim",
+    "description": "Hyperextensible Vim-based text editor focused on extensibility and usability.",
+    "terminal": true,
+    "formats": [
+      "tarball",
+      "appimage"
+    ],
+    "category": "Development",
+    "icon_url": "https://raw.githubusercontent.com/neovim/neovim.github.io/master/static/logos/neovim-logo-300x87.png",
+    "screenshots": [
+      "https://nvchad.com/screenshots/onedark.webp"
+    ],
+    "metadata": {
+      "maintainer": "neovim",
+      "license": "Apache-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "scrcpy",
+    "package_name": "scrcpy",
+    "slug": "scrcpy",
+    "url_template": "https://github.com/Genymobile/scrcpy",
+    "description": "Display and control Android devices connected via USB or TCP/IP from your desktop.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Development",
+    "icon_url": "https://raw.githubusercontent.com/Genymobile/scrcpy/refs/heads/master/app/data/scrcpy.png",
+    "screenshots": [
+      "https://raw.githubusercontent.com/Genymobile/scrcpy/refs/heads/master/assets/screenshot-debian-600.jpg"
+    ],
+    "metadata": {
+      "maintainer": "Genymobile",
+      "license": "Apache-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Vscodium",
+    "package_name": "vscodium",
+    "slug": "vscodium",
+    "url_template": "https://github.com/VSCodium/vscodium",
+    "description": "Free/Libre Open Source Software Binaries of VS Code. A code editor with a massive ecosystem of extensions.",
+    "terminal": false,
+    "formats": [
+      "tarball",
+      "appimage"
+    ],
+    "category": "Development",
+    "icon_url": "https://raw.githubusercontent.com/VSCodium/vscodium/83452e4c588142ee4868185ea535738108e428bf/icons/stable/codium_cnl.svg",
+    "screenshots": [
+      "https://vscodium.com/img/vscodium.png"
+    ],
+    "metadata": {
+      "maintainer": "VSCodium",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Strawberry",
+    "package_name": "strawberry",
+    "slug": "strawberry",
+    "url_template": "https://github.com/strawberrymusicplayer/strawberry",
+    "description": "A music player and collection organizer focused on high-fidelity audio playback.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Music",
+    "icon_url": "https://user-images.githubusercontent.com/554710/56511791-75f3ed80-64fb-11e9-815d-13bcb704a2dd.png",
+    "screenshots": [
+      "https://raw.githubusercontent.com/strawberrymusicplayer/strawberry/master/data/screenshot/screenshot.png"
+    ],
+    "metadata": {
+      "maintainer": "strawberry",
+      "license": "GPL-3.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Discord",
+    "package_name": "discord",
+    "slug": "discord",
+    "url_template": "https://discord.com/api/download?platform=linux&format=tar.gz",
+    "description": "The official communication platform for communities to talk, chat, and hang out.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Discord",
+      "license": "Unknown"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Floorp",
+    "package_name": "floorp",
+    "slug": "floorp",
+    "url_template": "https://github.com/Floorp-Projects/Floorp",
+    "description": "A highly customizable and privacy-oriented Firefox fork with advanced workspace features.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": "https://commons.wikimedia.org/wiki/File:Floorp_logo_without_text.svg#/media/File:Floorp_logo_without_text.svg",
+    "screenshots": [
+      "https://floorp.app/screenshot.avif"
+    ],
+    "metadata": {
+      "maintainer": "Floorp-Projects",
+      "license": "MPL-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Helium Browser",
+    "package_name": "helium",
+    "slug": "helium",
+    "url_template": "https://github.com/imputnet/helium-linux",
+    "description": "The Chromium-based web browser made for people, with love. Privacy-first with unbiased ad-blocking. No bloat and no noise..",
+    "terminal": false,
+    "formats": [
+      "tarball",
+      "appimage"
+    ],
+    "category": "Network",
+    "icon_url": "https://raw.githubusercontent.com/imputnet/helium/refs/heads/main/resources/branding/app_icon/raw.png",
+    "screenshots": [
+      "view-source:https://helium.computer/screenshots/lead.avif"
+    ],
+    "metadata": {
+      "maintainer": "imputnet",
+      "license": "GPL-3.0, BSD-3-Clause license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Stoat",
+    "package_name": "stoat",
+    "slug": "stoat",
+    "url_template": "https://github.com/stoatchat/for-desktop",
+    "description": "A decentralized and secure chat application for privacy-conscious communication.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": "https://avatars.githubusercontent.com/u/234249415?s=200&v=4",
+    "screenshots": [
+      "https://stoat.chat/_astro/product.BtN8cTR_.png"
+    ],
+    "metadata": {
+      "maintainer": "stoatchat",
+      "license": "AGPL-3.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Waterfox",
+    "package_name": "waterfox",
+    "slug": "waterfox",
+    "url_template": "https://cdn.waterfox.com/waterfox/releases/$wf_ver/Linux_x86_64/waterfox-$wf_ver.tar.bz2",
+    "description": "A privacy-focused web browser based on Firefox, optimized for performance and customization.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": "https://www.waterfox.com/_astro/app-icon-dark.CwYTjDIq.png",
+    "screenshots": [
+      "https://www.waterfox.com/_astro/dark-tst.DZiOIaKf_Z2mFk5k.png"
+    ],
+    "metadata": {
+      "maintainer": "Waterfox-Project",
+      "license": "MPL-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Zen Browser",
+    "package_name": "zen",
+    "slug": "zen",
+    "url_template": "https://github.com/zen-browser/desktop/",
+    "description": "A beautiful and fast web browser built on top of Firefox, focused on productivity and privacy.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Network",
+    "icon_url": "https://raw.githubusercontent.com/zen-browser/desktop/refs/heads/dev/docs/assets/zen-dark.svg",
+    "screenshots": [
+      "https://zen-browser.app/_astro/ComImage.DV0rTSHO_Z1aH5BP.webp"
+    ],
+    "metadata": {
+      "maintainer": "zen-browser",
+      "license": "MPL-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Basalt",
+    "package_name": "basalt",
+    "slug": "basalt",
+    "url_template": "https://github.com/erikjuhani/basalt",
+    "description": "A lightweight and fast desktop application for project and task management.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Office",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "erikjuhani",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Obsidian",
+    "package_name": "obsidian",
+    "slug": "obsidian",
+    "url_template": "https://github.com/obsidianmd/obsidian-releases",
+    "description": "A powerful knowledge base that works on top of a local folder of plain text Markdown files.",
+    "terminal": false,
+    "formats": [
+      "appimage",
+      "tarball"
+    ],
+    "category": "Office",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "obsidianmd",
+      "license": "Catalyst license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Bat",
+    "package_name": "bat",
+    "slug": "bat",
+    "url_template": "https://github.com/sharkdp/bat",
+    "description": "A cat(1) clone with syntax highlighting and Git integration for the terminal.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "sharkdp",
+      "license": "Apache-2.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Croc",
+    "package_name": "croc",
+    "slug": "croc",
+    "url_template": "https://github.com/schollz/croc",
+    "description": "Easily and securely send files and folders from one computer to another.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "schollz",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Foot",
+    "package_name": "foot",
+    "slug": "foot",
+    "url_template": "https://codeberg.org/dnkl/foot",
+    "description": "A fast, lightweight, and minimalistic Wayland terminal emulator.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "dnkl",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "keepassxc",
+    "package_name": "keepassxc",
+    "slug": "keepassxc",
+    "url_template": "https://github.com/keepassxreboot/keepassxc",
+    "description": "KeePassXC is a modern, secure, and open-source password manager that stores and manages your most sensitive information. You can run KeePassXC on Windows, macOS, and Linux systems. KeePassXC is for people with extremely high demands of secure personal data management.",
+    "terminal": false,
+    "formats": [
+      "appimage"
+    ],
+    "category": "Utility",
+    "icon_url": "https://keepassxc.org/assets/img/keepassxc.svg",
+    "screenshots": [
+      "https://keepassxc.org/assets/img/screenshots/welcome_screen.png",
+      "https://keepassxc.org/assets/img/screenshots/unlock_database.png",
+      "https://keepassxc.org/assets/img/screenshots/new_db_wizard_1.png",
+      "https://keepassxc.org/assets/img/screenshots/new_db_wizard_2.png",
+      "https://keepassxc.org/assets/img/screenshots/import_wizard.png",
+      "https://keepassxc.org/assets/img/screenshots/csv_import.png",
+      "https://keepassxc.org/assets/img/screenshots/database_view.png",
+      "https://keepassxc.org/assets/img/screenshots/edit_entry.png",
+      "https://keepassxc.org/assets/img/screenshots/edit_entry_icons.png",
+      "https://keepassxc.org/assets/img/screenshots/password_generator_advanced.png",
+      "https://keepassxc.org/assets/img/screenshots/passphrase_generator.png",
+      "https://keepassxc.org/assets/img/screenshots/database_reports.png"
+    ],
+    "metadata": {
+      "maintainer": "droidmonkey, phoerious",
+      "license": "Unknown"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Lazygit",
+    "package_name": "lazygit",
+    "slug": "lazygit",
+    "url_template": "https://github.com/jesseduffield/lazygit",
+    "description": "Lazygit is a fast and intuitive terminal-based interface for Git commands, designed to simplify complex workflows like staging, committing, and rebasing through a navigable keyboard-driven TUI.",
+    "terminal": false,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "jesseduffield",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "lf",
+    "package_name": "lf",
+    "slug": "lf",
+    "url_template": "https://github.com/gokcehan/lf",
+    "description": "lf (as in list files) is a terminal file manager written in Go with a heavy inspiration from ranger file manager. ",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "gokcehan",
+      "license": "MIT"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "nnn",
+    "package_name": "nnn",
+    "slug": "nnn",
+    "url_template": "https://github.com/jarun/nnn",
+    "description": "nnn (n³) is a full-featured terminal file manager. It's tiny, nearly 0-config and incredibly fast.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "jarun",
+      "license": "BSD-2-Clause license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "Ranger",
+    "package_name": "ranger",
+    "slug": "ranger",
+    "url_template": "https://ranger.fm/ranger-stable.tar.gz",
+    "description": "A console file manager with VI key bindings and a multi-pane minimalistic interface.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "ranger",
+      "license": "GPL-3.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "vesktop",
+    "package_name": "vesktop",
+    "slug": "vesktop",
+    "url_template": "https://github.com/Vencord/Vesktop",
+    "description": "An all-in-one Discord client with built-in Vencord and plugins for a better experience.",
+    "terminal": false,
+    "formats": [
+      "tarball",
+      "appimage"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "Vencord",
+      "license": "GPL-3.0 license"
+    },
+    "origin": "official"
+  },
+  {
+    "name": "yt-dlp",
+    "package_name": "yt-dlp",
+    "slug": "yt-dlp",
+    "url_template": "https://github.com/yt-dlp/yt-dlp",
+    "description": "A feature-rich command-line audio/video downloader with support for thousands of sites.",
+    "terminal": true,
+    "formats": [
+      "tarball"
+    ],
+    "category": "Utility",
+    "icon_url": null,
+    "screenshots": [],
+    "metadata": {
+      "maintainer": "pyston",
+      "license": "Unlicense"
+    },
+    "origin": "official"
+  }
+]

@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary:    #0a0a0a;
+  --bg-secondary:  #111111;
+  --bg-card:       #161616;
+  --bg-hover:      #1e1e1e;
+  --border:        #2a2a2a;
+  --text-primary:  #e8e0d0;   /* crema */
+  --text-secondary:#a09880;   /* crema apagado */
+  --text-muted:    #5a5248;
+  --accent:        #5bbfa0;   /* aqua suave */
+  --accent-dim:    #3d8f76;   /* aqua suave oscuro */
+  --accent-glow:   rgba(91, 191, 160, 0.06);
+  --official:      #5bbfa0;
+  --community:     #a09880;
+}
+
+body {
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 0;
+}
+
+img.app-icon {
+  background: transparent;
+  object-fit: contain;
+  flex-shrink: 0;
+}

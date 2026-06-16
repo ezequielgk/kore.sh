@@ -1,0 +1,64 @@
+---
+export interface Props {
+  pkgName: string;
+  url: string;
+  format: string;
+}
+
+const { pkgName, url, format } = Astro.props;
+
+// Construimos el comando completo con los argumentos pregenerados
+const standaloneCommand = `curl -fsSL https://kore.sh/get | sh -s -- --pkg "${pkgName}" --url "${url}" --format "${format}"`;
+const kpmCommand = `kpm install ${pkgName}`;
+---
+
+<div class="space-y-8">
+  <div class="bg-kore-surface border border-gray-800 rounded-xl p-6">
+    <h3 class="text-lg font-semibold text-white mb-2">Option A: Using KPM</h3>
+    <p class="text-gray-400 text-sm mb-4">If you already have Kore Package Manager installed on your system.</p>
+    
+    <div class="relative">
+      <pre class="bg-kore-dark rounded-lg p-4 overflow-x-auto text-gray-300 font-mono text-sm border border-gray-700"><code>{kpmCommand}</code></pre>
+      <button class="copy-btn absolute top-3 right-3 p-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors" data-cmd={kpmCommand} aria-label="Copy command">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-kore-surface border border-gray-800 rounded-xl p-6">
+    <h3 class="text-lg font-semibold text-white mb-2">Option B: Standalone Installation</h3>
+    <p class="text-gray-400 text-sm mb-4">This command downloads a lightweight installer that installs <strong>{pkgName}</strong> directly, without requiring KPM.</p>
+    
+    <div class="relative">
+      <pre class="bg-kore-dark rounded-lg p-4 overflow-x-auto text-gray-300 font-mono text-sm border border-gray-700 whitespace-pre-wrap break-all"><code>{standaloneCommand}</code></pre>
+      <button class="copy-btn absolute top-3 right-3 p-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors" data-cmd={standaloneCommand} aria-label="Copy command">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const button = e.currentTarget as HTMLButtonElement;
+      const cmd = button.getAttribute('data-cmd');
+      if (cmd) {
+        try {
+          await navigator.clipboard.writeText(cmd);
+          const originalHTML = button.innerHTML;
+          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+          setTimeout(() => {
+            button.innerHTML = originalHTML;
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy text: ', err);
+        }
+      }
+    });
+  });
+</script>

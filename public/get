@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PKG=""
+URL=""
+FORMAT=""
+
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --pkg) PKG="$2"; shift ;;
+    --url) URL="$2"; shift ;;
+    --format) FORMAT="$2"; shift ;;
+    *) echo "Unknown parameter passed: $1"; exit 1 ;;
+  esac
+  shift
+done
+
+if [ -z "$PKG" ] || [ -z "$URL" ] || [ -z "$FORMAT" ]; then
+  echo "Uso: curl -fsSL https://kore.sh/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
+  exit 1
+fi
+
+ARCH="$(uname -m)"
+OS="$(uname -s)"
+KPM_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/kpm"
+KPM_BIN="${HOME}/.local/bin"
+TMP_DIR="$(mktemp -d)"
+
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT
+
+echo "→ Instalando '$PKG' via Kore Catalog..."
+
+# 3. Si es GitHub, resolver la última release via API
+if echo "$URL" | grep -q "github.com"; then
+  REPO="$(echo "$URL" | sed 's|https://github.com/||')"
+  LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+    | grep '"browser_download_url"' \
+    | grep -i "$ARCH\|x86_64\|linux" \
+    | grep -v "\.sig\|\.sha\|\.asc\|\.tar\.gz\|\.zip" \
+    | head -1 \
+    | sed 's/.*": "\(.*\)".*/\1/')"
+  
+  if [ -z "$LATEST" ]; then
+    # Fallback to source/tarball if the specific arch binary isn't found easily in the first try
+    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+      | grep '"browser_download_url"' \
+      | grep -i "linux" \
+      | grep -v "\.sig\|\.sha\|\.asc" \
+      | head -1 \
+      | sed 's/.*": "\(.*\)".*/\1/')"
+  fi
+
+  if [ -z "$LATEST" ]; then
+    echo "✗ No se encontró un asset compatible para $ARCH."
+    exit 1
+  fi
+  DOWNLOAD_URL="$LATEST"
+else
+  DOWNLOAD_URL="$URL"
+fi
+
+# 4. Descargar
+echo "→ Descargando desde $DOWNLOAD_URL..."
+FILENAME="$(basename "$DOWNLOAD_URL")"
+curl -fsSL --progress-bar "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"
+
+# 5. Extraer según formato
+mkdir -p "$TMP_DIR/extracted"
+case "$FILENAME" in
+  *.tar.gz|*.tgz) tar -xzf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.tar.xz)       tar -xJf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.tar.bz2)      tar -xjf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.zip)          unzip -q "$TMP_DIR/$FILENAME" -d "$TMP_DIR/extracted" ;;
+  *.AppImage)
+    mkdir -p "$KPM_DATA/install/$PKG"
+    cp "$TMP_DIR/$FILENAME" "$KPM_DATA/install/$PKG/$PKG.AppImage"
+    chmod +x "$KPM_DATA/install/$PKG/$PKG.AppImage"
+    mkdir -p "$KPM_BIN"
+    ln -sf "$KPM_DATA/install/$PKG/$PKG.AppImage" "$KPM_BIN/$PKG"
+    echo "✓ $PKG instalado. Ejecutá: $PKG"
+    exit 0
+    ;;
+  *) 
+    # Attempt to treat it as a direct executable if it's not a known archive
+    cp "$TMP_DIR/$FILENAME" "$TMP_DIR/extracted/$PKG"
+    ;;
+esac
+
+# 6. Encontrar ejecutable principal
+EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
+  | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+  | head -1)"
+
+if [ -z "$EXEC" ]; then
+  # Try to find any file if not executable (maybe missed perms)
+  EXEC="$(find "$TMP_DIR/extracted" -type f \
+    | grep -v "\.so\|\.png\|\.svg\|\.desktop" \
+    | head -1)"
+  if [ -z "$EXEC" ]; then
+    echo "✗ No se encontró ejecutable en el paquete."
+    exit 1
+  fi
+fi
+
+# 7. Instalar
+mkdir -p "$KPM_DATA/install/$PKG"
+cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
+chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
+mkdir -p "$KPM_BIN"
+ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" "$KPM_BIN/$PKG"
+
+# 8. Agregar ~/.local/bin al PATH si no está
+if ! echo "$PATH" | grep -q "$KPM_BIN"; then
+  echo ""
+  echo "⚠ Agregá esto a tu ~/.bashrc o ~/.zshrc:"
+  echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+fi
+
+echo ""
+echo "✓ $PKG instalado exitosamente."
+echo "  Ejecutá: $PKG"

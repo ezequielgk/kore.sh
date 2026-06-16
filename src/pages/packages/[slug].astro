@@ -1,0 +1,269 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+export async function getStaticPaths() {
+  const dataDir = path.join(process.cwd(), 'src', 'data');
+  let packages: any[] = [];
+  try {
+    const pkgData = await fs.readFile(path.join(dataDir, 'packages.json'), 'utf-8');
+    packages = JSON.parse(pkgData);
+  } catch (e) {
+    console.warn("Data not found.");
+  }
+
+  return packages.map((pkg) => {
+    return {
+      params: { slug: pkg.slug },
+      props: { pkg },
+    };
+  });
+}
+
+const { pkg } = Astro.props;
+const format = pkg.formats && pkg.formats.length > 0 ? pkg.formats[0] : 'tarball';
+
+const kpmCmd = `$ kpm install ${pkg.package_name}`;
+const standaloneCmd = `$ curl -fsSL http://localhost:4321/get | sh -s -- --pkg "${pkg.package_name}" --url "${pkg.url_template}" --format "${format}"`;
+const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--community)';
+---
+
+<Layout title={`${pkg.name} - Kore`}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row gap-6 items-start mb-10">
+      <div class="flex-shrink-0 flex items-center justify-center">
+        <img
+          src={pkg.icon_url || '/v4/icon/kore-logo.svg'}
+          alt={pkg.name}
+          onerror="this.src='/v4/icon/kore-logo.svg'"
+          width="56"
+          height="56"
+          class="app-icon"
+          style="width: 56px; height: 56px;"
+        />
+      </div>
+      
+      <div class="flex-grow">
+        <div class="flex flex-col items-start gap-1 mb-2">
+          <h1 class="text-3xl md:text-4xl font-semibold m-0" style="color: var(--text-primary);">{pkg.name}</h1>
+          <span class="text-sm uppercase font-medium" style={`color: ${originColor};`}>
+            {pkg.origin}
+          </span>
+        </div>
+        
+        <p class="text-lg mb-4 max-w-2xl" style="color: var(--text-secondary);">{pkg.description}</p>
+        
+        <div class="text-sm font-medium" style="color: var(--text-muted);">
+          Maintainer: <span style="color: var(--text-primary);">{pkg.metadata.maintainer}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div class="lg:col-span-2">
+        <!-- Install Section -->
+        <h2 class="text-xl font-semibold mb-4" style="color: var(--text-primary);">Install</h2>
+        
+        <div class="mb-8" style="background: var(--bg-card); border: 1px solid var(--border); overflow: hidden;">
+          <div class="flex border-b" style="border-color: var(--border); background: var(--bg-secondary);">
+            <button class="tab-btn active flex-1 py-2.5 text-sm font-medium transition-colors" data-target="kpm-tab" style="color: var(--text-primary); border-bottom: 2px solid var(--accent);">
+              With KPM
+            </button>
+            <button class="tab-btn flex-1 py-2.5 text-sm font-medium transition-colors" data-target="standalone-tab" style="color: var(--text-muted); border-bottom: 2px solid transparent;">
+              Without KPM
+            </button>
+          </div>
+          
+          <div class="p-4">
+            <div id="kpm-tab" class="tab-content block">
+              <div class="relative group">
+                <pre class="p-4 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>{kpmCmd}</code></pre>
+                <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd={kpmCmd.replace(/^\$ /, '')}>
+                  Copy
+                </button>
+              </div>
+            </div>
+            
+            <div id="standalone-tab" class="tab-content hidden">
+              <div class="relative group">
+                <pre class="p-4 overflow-x-auto text-sm whitespace-pre-wrap break-all" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>{standaloneCmd}</code></pre>
+                <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd={standaloneCmd.replace(/^\$ /, '')}>
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screenshots Carousel -->
+        {pkg.screenshots && pkg.screenshots.length > 0 && (
+          <div class="my-10">
+            <h2 class="text-xl font-semibold mb-4" style="color: var(--text-primary);">Screenshots</h2>
+            <div class="relative carousel-container group" style="overflow: hidden; border: 1px solid var(--border); background: var(--bg-secondary);">
+              <div class="carousel-track flex transition-transform duration-300 ease-in-out" style="width: 100%;">
+                {pkg.screenshots.map((url: string) => (
+                  <div class="carousel-slide flex-shrink-0" style="width: 100%;">
+                    <img 
+                      src={url} 
+                      alt="Screenshot" 
+                      class="w-full h-[240px] md:h-[400px] object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              {pkg.screenshots.length > 1 && (
+                <>
+                  <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style="background: rgba(10,10,10,0.6); color: var(--text-primary); border: 1px solid var(--border);">
+                    &larr;
+                  </button>
+                  <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style="background: rgba(10,10,10,0.6); color: var(--text-primary); border: 1px solid var(--border);">
+                    &rarr;
+                  </button>
+                  
+                  <div class="carousel-dots absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                    {pkg.screenshots.map((_: any, i: number) => (
+                      <button class="dot w-2 h-2 transition-colors" data-index={i} style={i === 0 ? "background: var(--accent);" : "background: var(--border);"} aria-label={`Go to slide ${i + 1}`}></button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <!-- Metadata Sidebar -->
+      <div>
+        <div class="sticky top-20 space-y-6">
+          <div>
+            <h3 class="text-xs font-semibold mb-3 uppercase tracking-wider" style="color: var(--text-muted);">Metadata</h3>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">License</span>
+                <span class="px-2 py-0.5 text-xs" style="background: var(--bg-secondary); color: var(--text-primary);">{pkg.metadata.license}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">Format</span>
+                <span class="px-2 py-0.5 text-xs" style="background: var(--bg-secondary); color: var(--text-primary);">{format}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">Terminal</span>
+                <span class="px-2 py-0.5 text-xs" style="background: var(--bg-secondary); color: var(--text-primary);">{pkg.terminal ? 'Yes' : 'No'}</span>
+              </div>
+              <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">Category</span>
+                <span class="px-2 py-0.5 text-xs" style="background: var(--bg-secondary); color: var(--text-primary);">{pkg.category}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold mb-3 uppercase tracking-wider" style="color: var(--text-muted);">Links</h3>
+            <a href={pkg.url_template} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm transition-colors hover:underline" style="color: var(--text-primary);">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+              Source Repository
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tabs logic
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = (e.currentTarget as HTMLElement).getAttribute('data-target');
+          
+          tabBtns.forEach(b => {
+            (b as HTMLElement).style.color = 'var(--text-muted)';
+            (b as HTMLElement).style.borderBottomColor = 'transparent';
+          });
+          
+          const clickedBtn = e.currentTarget as HTMLElement;
+          clickedBtn.style.color = 'var(--text-primary)';
+          clickedBtn.style.borderBottomColor = 'var(--accent)';
+          
+          tabContents.forEach(content => {
+            content.classList.remove('block');
+            content.classList.add('hidden');
+          });
+          
+          document.getElementById(target!)?.classList.remove('hidden');
+          document.getElementById(target!)?.classList.add('block');
+        });
+      });
+
+      // Copy logic
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const button = e.currentTarget as HTMLButtonElement;
+          const cmd = button.getAttribute('data-cmd');
+          if (cmd) {
+            try {
+              await navigator.clipboard.writeText(cmd);
+              const originalHTML = button.innerHTML;
+              button.innerHTML = 'Copied!';
+              button.style.color = 'var(--accent)';
+              button.style.borderColor = 'var(--accent)';
+              setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.color = 'var(--text-muted)';
+                button.style.borderColor = 'var(--border)';
+              }, 2000);
+            } catch (err) {
+              console.error('Failed to copy text: ', err);
+            }
+          }
+        });
+      });
+
+      // Carousel Logic
+      const track = document.querySelector('.carousel-track') as HTMLElement;
+      if (track) {
+        const slides = Array.from(track.children);
+        const nextBtn = document.querySelector('.carousel-next');
+        const prevBtn = document.querySelector('.carousel-prev');
+        const dots = document.querySelectorAll('.dot');
+        let currentIndex = 0;
+
+        const updateCarousel = (index: number) => {
+          track.style.transform = `translateX(-${index * 100}%)`;
+          dots.forEach((dot, i) => {
+            (dot as HTMLElement).style.background = i === index ? 'var(--accent)' : 'var(--border)';
+          });
+        };
+
+        if (nextBtn) {
+          nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % slides.length;
+            updateCarousel(currentIndex);
+          });
+        }
+
+        if (prevBtn) {
+          prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+            updateCarousel(currentIndex);
+          });
+        }
+
+        dots.forEach((dot, i) => {
+          dot.addEventListener('click', () => {
+            currentIndex = i;
+            updateCarousel(currentIndex);
+          });
+        });
+      }
+    });
+  </script>
+</Layout>

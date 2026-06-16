@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Kore - The application catalog for KPM" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/v4/icon/kore-logo.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <header style="background: var(--bg-secondary); border-bottom: 1px solid var(--border);" class="sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+        <a href="/v4/" class="flex items-center gap-2">
+          <img src="/v4/icon/kore-logo.svg" alt="KPM" width="24" height="24" />
+          <span class="font-semibold text-base tracking-tight" style="color: var(--text-primary)">Kore</span>
+        </a>
+        <nav class="hidden md:flex gap-6 text-sm font-medium">
+          <a href="/v4/" style="color: var(--text-secondary);" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
+          <a href="/v4/browse" style="color: var(--text-secondary);" class="hover:text-[var(--text-primary)] transition-colors">Browse</a>
+          <a href="https://github.com/ezequielgk/Kore-Recipes" target="_blank" style="color: var(--text-secondary);" class="hover:text-[var(--text-primary)] transition-colors">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-grow">
+      <slot />
+    </main>
+
+    <footer class="py-6 mt-12 text-center text-sm border-t" style="border-color: var(--border); color: var(--text-muted);">
+      <p>Kore — Powered by KPM</p>
+    </footer>
+  </body>
+</html>

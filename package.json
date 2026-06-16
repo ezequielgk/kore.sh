@@ -1,0 +1,23 @@
+{
+  "name": "kore-packages-web",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "node src/scripts/fetch-recipes.mjs && astro dev",
+    "start": "node src/scripts/fetch-recipes.mjs && astro dev",
+    "build": "node src/scripts/fetch-recipes.mjs && astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/tailwind": "^5.1.4",
+    "@ltd/j-toml": "^1.38.0",
+    "astro": "^5.1.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  }
+}

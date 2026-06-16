@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Utility",
+    "count": 11
+  },
+  {
+    "name": "Network",
+    "count": 9
+  },
+  {
+    "name": "Development",
+    "count": 8
+  },
+  {
+    "name": "Games",
+    "count": 8
+  },
+  {
+    "name": "Music",
+    "count": 3
+  },
+  {
+    "name": "Office",
+    "count": 2
+  },
+  {
+    "name": "Graphics",
+    "count": 1
+  },
+  {
+    "name": "Internet",
+    "count": 1
+  }
+]

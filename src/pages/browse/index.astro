@@ -1,0 +1,207 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AppCard from '../../components/AppCard.astro';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const dataDir = path.join(process.cwd(), 'src', 'data');
+let packages: any[] = [];
+let categories: any[] = [];
+
+try {
+  const pkgData = await fs.readFile(path.join(dataDir, 'packages.json'), 'utf-8');
+  packages = JSON.parse(pkgData);
+  const catData = await fs.readFile(path.join(dataDir, 'categories.json'), 'utf-8');
+  categories = JSON.parse(catData);
+} catch (e) {
+  console.warn("Data not found.");
+}
+---
+
+<Layout title="Browse Packages - Kore">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row gap-10">
+      
+      <!-- Sidebar -->
+      <aside class="w-full md:w-[240px] flex-shrink-0">
+        <div class="sticky top-24 space-y-8">
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider mb-4" style="color: var(--text-secondary);">Filters</h4>
+            
+            <div class="space-y-4">
+              <div>
+                <h5 class="text-sm font-semibold mb-2" style="color: var(--text-primary);">Origin</h5>
+                <div class="space-y-2">
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" name="origin" value="official" class="form-checkbox border-gray-700 bg-[var(--bg-secondary)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-[var(--bg-primary)]" />
+                    <span class="text-sm group-hover:text-[var(--text-primary)] transition-colors" style="color: var(--text-secondary);">Official</span>
+                  </label>
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" name="origin" value="community" class="form-checkbox border-gray-700 bg-[var(--bg-secondary)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-[var(--bg-primary)]" />
+                    <span class="text-sm group-hover:text-[var(--text-primary)] transition-colors" style="color: var(--text-secondary);">Community</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <h5 class="text-sm font-semibold mb-2" style="color: var(--text-primary);">Category</h5>
+                <div class="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                  {categories.map((cat) => (
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                      <input type="checkbox" name="category" value={cat.name} class="form-checkbox border-gray-700 bg-[var(--bg-secondary)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-[var(--bg-primary)]" />
+                      <span class="text-sm group-hover:text-[var(--text-primary)] transition-colors" style="color: var(--text-secondary);">{cat.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button id="clearFiltersBtn" class="text-sm hover:text-[var(--text-primary)] transition-colors hidden" style="color: var(--text-muted);">
+            Clear filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-grow min-w-0">
+        
+        <!-- Search -->
+        <div class="mb-8 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5" style="color: var(--text-muted);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input 
+            type="search" 
+            id="searchInput"
+            class="block w-full pl-10 pr-3 py-3 leading-5 focus:outline-none focus:ring-0 transition-colors w-full" 
+            style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary);"
+            placeholder="Search packages..." 
+          />
+        </div>
+
+        <div id="resultsInfo" class="text-sm mb-6" style="color: var(--text-muted);">
+          Showing <span id="resultCount" style="color: var(--text-primary);">{packages.length}</span> of {packages.length} packages
+        </div>
+        
+        <div id="packagesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {packages.map(pkg => (
+            <div class="package-item h-full" data-name={pkg.name.toLowerCase()} data-category={pkg.category} data-origin={pkg.origin}>
+              <AppCard pkg={pkg} />
+            </div>
+          ))}
+        </div>
+        
+        <div id="noResults" class="hidden text-center py-20">
+          <img src="/v4/icon/kore-logo.svg" alt="No results" class="mx-auto mb-6 opacity-30" width="80" height="80" />
+          <h3 class="text-xl font-bold mb-2" style="color: var(--text-primary);">No packages found</h3>
+          <p style="color: var(--text-muted);">Try adjusting your search or filters.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <style>
+    input[type="search"]:focus {
+      border-color: var(--accent) !important;
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const items = document.querySelectorAll('.package-item');
+      const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+      const originCheckboxes = document.querySelectorAll('input[name="origin"]');
+      const categoryCheckboxes = document.querySelectorAll('input[name="category"]');
+      const resultCount = document.getElementById('resultCount');
+      const resultsInfo = document.getElementById('resultsInfo');
+      const noResults = document.getElementById('noResults');
+      const clearBtn = document.getElementById('clearFiltersBtn');
+      const totalCount = items.length;
+      
+      const filterPackages = () => {
+        const query = searchInput.value.toLowerCase().trim();
+        
+        const selectedOrigins = Array.from(document.querySelectorAll('input[name="origin"]:checked')).map((cb: any) => cb.value);
+        const selectedCategories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map((cb: any) => cb.value);
+        
+        let visibleCount = 0;
+        let hasActiveFilters = query.length > 0 || selectedOrigins.length > 0 || selectedCategories.length > 0;
+        
+        if (clearBtn) {
+          clearBtn.style.display = hasActiveFilters ? 'block' : 'none';
+        }
+
+        items.forEach((item) => {
+          const htmlItem = item as HTMLElement;
+          const name = htmlItem.dataset.name || '';
+          const category = htmlItem.dataset.category || '';
+          const origin = htmlItem.dataset.origin || '';
+          
+          const matchQuery = name.includes(query);
+          const matchOrigin = selectedOrigins.length === 0 || selectedOrigins.includes(origin);
+          const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
+          
+          if (matchQuery && matchOrigin && matchCategory) {
+            htmlItem.style.display = 'block';
+            visibleCount++;
+          } else {
+            htmlItem.style.display = 'none';
+          }
+        });
+        
+        if (resultCount) {
+          resultCount.textContent = visibleCount.toString();
+        }
+        
+        if (noResults) {
+          if (visibleCount === 0) {
+            noResults.classList.remove('hidden');
+            if (resultsInfo) resultsInfo.style.display = 'none';
+          } else {
+            noResults.classList.add('hidden');
+            if (resultsInfo) resultsInfo.style.display = 'block';
+          }
+        }
+        
+        // Update URL
+        const url = new URL(window.location.href);
+        if (query) url.searchParams.set('q', searchInput.value);
+        else url.searchParams.delete('q');
+        
+        if (selectedCategories.length === 1) url.searchParams.set('category', selectedCategories[0]);
+        else url.searchParams.delete('category');
+        
+        window.history.replaceState({}, '', url);
+      };
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          originCheckboxes.forEach((cb: any) => cb.checked = false);
+          categoryCheckboxes.forEach((cb: any) => cb.checked = false);
+          filterPackages();
+        });
+      }
+
+      // Initial state from URL
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q');
+      const category = params.get('category');
+      
+      if (q && searchInput) searchInput.value = q;
+      if (category) {
+        const input = document.querySelector(`input[name="category"][value="${category}"]`) as HTMLInputElement;
+        if (input) input.checked = true;
+      }
+
+      searchInput?.addEventListener('input', filterPackages);
+      originCheckboxes.forEach(cb => cb.addEventListener('change', filterPackages));
+      categoryCheckboxes.forEach(cb => cb.addEventListener('change', filterPackages));
+      
+      filterPackages();
+    });
+  </script>
+</Layout>

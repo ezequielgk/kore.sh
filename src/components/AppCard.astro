@@ -1,0 +1,50 @@
+---
+export interface Props {
+  pkg: {
+    name: string;
+    package_name: string;
+    slug: string;
+    description: string;
+    icon_url: string | null;
+    category: string;
+    origin: string;
+  };
+}
+
+const { pkg } = Astro.props;
+const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--community)';
+---
+
+<a href={`/v4/packages/${pkg.slug}`} class="block h-full transition-colors duration-200" style="background: var(--bg-card); border: 1px solid var(--border); padding: 16px; outline: none; box-shadow: none;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+  <div class="flex items-start gap-4 mb-3">
+    <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
+      <img
+        src={pkg.icon_url || '/v4/icon/kore-logo.svg'}
+        alt={pkg.name}
+        onerror="this.src='/v4/icon/kore-logo.svg'"
+        width="36"
+        height="36"
+        class="app-icon"
+        style="width: 36px; height: 36px;"
+        loading="lazy"
+      />
+    </div>
+    <div class="flex-grow min-w-0">
+      <div class="flex flex-col">
+        <h3 class="text-base font-semibold truncate m-0" style="color: var(--text-primary);" title={pkg.name}>{pkg.name}</h3>
+        <span class="text-xs uppercase font-medium mt-1" style={`color: ${originColor};`}>
+          {pkg.origin}
+        </span>
+      </div>
+    </div>
+  </div>
+  
+  <p class="text-sm line-clamp-2 mt-2 mb-3" style="color: var(--text-secondary); min-height: 2.5rem;">
+    {pkg.description}
+  </p>
+  
+  <div class="flex items-center text-xs" style="color: var(--text-muted);">
+    <span>{pkg.category}</span>
+    <span class="mx-2">&rarr;</span>
+  </div>
+</a>

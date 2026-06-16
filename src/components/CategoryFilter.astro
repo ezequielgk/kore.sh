@@ -1,0 +1,58 @@
+---
+export interface Props {
+  categories: {name: string, count: number}[];
+}
+const { categories } = Astro.props;
+---
+
+<div class="space-y-6">
+  <div>
+    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Origin</h4>
+    <div class="space-y-2" id="originFilters">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="origin" value="all" class="text-kore-accent bg-gray-800 border-gray-700 focus:ring-kore-accent focus:ring-offset-kore-dark" checked />
+        <span class="text-gray-300">All</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="origin" value="official" class="text-kore-accent bg-gray-800 border-gray-700 focus:ring-kore-accent focus:ring-offset-kore-dark" />
+        <span class="text-gray-300">Official Only</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="origin" value="community" class="text-kore-accent bg-gray-800 border-gray-700 focus:ring-kore-accent focus:ring-offset-kore-dark" />
+        <span class="text-gray-300">Community Only</span>
+      </label>
+    </div>
+  </div>
+
+  <div>
+    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Categories</h4>
+    <div class="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar" id="categoryFilters">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="category" value="all" class="text-kore-accent bg-gray-800 border-gray-700 focus:ring-kore-accent focus:ring-offset-kore-dark" checked />
+        <span class="text-gray-300">All Categories</span>
+      </label>
+      {categories.map((cat) => (
+        <label class="flex items-center justify-between cursor-pointer group">
+          <div class="flex items-center gap-2">
+            <input type="radio" name="category" value={cat.name} class="text-kore-accent bg-gray-800 border-gray-700 focus:ring-kore-accent focus:ring-offset-kore-dark" />
+            <span class="text-gray-400 group-hover:text-gray-200 transition-colors">{cat.name}</span>
+          </div>
+          <span class="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">{cat.count}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #374151;
+    border-radius: 10px;
+  }
+</style>
