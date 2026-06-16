@@ -72,46 +72,57 @@ echo "→ Installing '$PKG' via Kore Catalog..."
 if echo "$URL" | grep -q "github.com"; then
   REPO="$(echo "$URL" | sed 's|https://github.com/||')"
   
-  # Determine format filter based on the --format argument
   if [ "$FORMAT" = "appimage" ]; then
-    FORMAT_FILTER="\.AppImage"
+    EXTS="AppImage"
   elif [ "$FORMAT" = "tarball" ]; then
-    FORMAT_FILTER="\.tar\.gz\|\.tar\.xz\|\.tar\.bz2\|\.tgz"
+    EXTS="tar\.gz|tar\.xz|tar\.bz2|tgz"
   elif [ "$FORMAT" = "zip" ]; then
-    FORMAT_FILTER="\.zip"
+    EXTS="zip"
   else
-    FORMAT_FILTER="." # Fallback: match anything if format is unknown
+    EXTS=".*"
   fi
 
-  # 1st attempt: Match Format + Architecture + "linux" (Adding || true to prevent script crash on no match)
-  LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-    | grep '"browser_download_url"' \
-    | grep -i "$FORMAT_FILTER" \
-    | grep -i "$ARCH\|x86_64\|linux" \
-    | head -1 \
-    | sed 's/.*": "\(.*\)".*/\1/' || true)"
+  # Apagamos temporalmente el modo estricto para evitar cierres silenciosos
+  set +euo pipefail
+
+  echo "→ Searching releases for '$PKG'..."
   
-  # 2nd attempt: Match Format + "linux"
-  if [ -z "$LATEST" ]; then
-    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-      | grep '"browser_download_url"' \
-      | grep -i "$FORMAT_FILTER" \
-      | grep -i "linux" \
-      | head -1 \
-      | sed 's/.*": "\(.*\)".*/\1/' || true)"
+  # Extraemos solo las URLs de descarga de forma limpia usando el JSON de GitHub
+  URLS=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep -Eo '"browser_download_url": "[^"]+"' | cut -d'"' -f4)
+  
+  # Si la etiqueta 'latest' no existe, buscamos en el listado general
+  if [ -z "$URLS" ]; then
+    URLS=$(curl -fsSL "https://api.github.com/repos/$REPO/releases" 2>/dev/null | grep -Eo '"browser_download_url": "[^"]+"' | cut -d'"' -f4)
   fi
 
-  # 3rd attempt: Match Format only
-  if [ -z "$LATEST" ]; then
-    LATEST="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-      | grep '"browser_download_url"' \
-      | grep -i "$FORMAT_FILTER" \
-      | head -1 \
-      | sed 's/.*": "\(.*\)".*/\1/' || true)"
+  # Filtro inteligente: ignoramos instaladores de Windows/macOS si estamos en Linux
+  if [ "$OS" = "Linux" ]; then
+    OS_IGNORE="macos|darwin|windows|win32|win64|\.exe$|\.msi$"
+  else
+    OS_IGNORE="linux|\.AppImage$|\.rpm$|\.deb$"
   fi
 
+  # Filtramos por formato y descartamos otros sistemas operativos
+  FORMAT_URLS=$(echo "$URLS" | grep -iE "\.($EXTS)$" | grep -ivE "$OS_IGNORE")
+
+  # 1. Intentamos encontrar la arquitectura exacta
+  LATEST=$(echo "$FORMAT_URLS" | grep -iE "($ARCH|x86_64|linux)" | head -1)
+  
+  # 2. Alternativa: buscar cualquier archivo de Linux
   if [ -z "$LATEST" ]; then
-    echo "✗ No compatible asset found for format '$FORMAT' and architecture '$ARCH'."
+    LATEST=$(echo "$FORMAT_URLS" | grep -i "linux" | head -1)
+  fi
+  
+  # 3. Alternativa final: tomar el primer archivo que coincida con el formato
+  if [ -z "$LATEST" ]; then
+    LATEST=$(echo "$FORMAT_URLS" | head -1)
+  fi
+
+  # Reactivamos el modo estricto
+  set -euo pipefail
+
+  if [ -z "$LATEST" ]; then
+    echo "✗ No compatible asset found for format '$FORMAT' and architecture '$ARCH' in GitHub Releases."
     exit 1
   fi
   DOWNLOAD_URL="$LATEST"
