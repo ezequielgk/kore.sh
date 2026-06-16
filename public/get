@@ -168,9 +168,12 @@ fi
 # 7. Instalar
 mkdir -p "$KPM_DATA/install/$PKG"
 cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
-chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
+
+REL_EXEC="${EXEC#$TMP_DIR/extracted/}"
+
+chmod +x "$KPM_DATA/install/$PKG/$REL_EXEC"
 mkdir -p "$KPM_BIN"
-ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" "$KPM_BIN/$PKG"
+ln -sf "$KPM_DATA/install/$PKG/$REL_EXEC" "$KPM_BIN/$PKG"
 
 # 8. Agregar ~/.local/bin al PATH si no está
 if ! echo "$PATH" | grep -q "$KPM_BIN"; then
