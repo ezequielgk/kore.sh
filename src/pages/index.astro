@@ -43,7 +43,7 @@ import categories from '../data/categories.json';
   <!-- DOCUMENTATION -->
   <section class="max-w-7xl mx-auto px-4 py-12 pt-0">
     <h2 class="text-xl font-semibold mb-6 pl-4 border-l-2 border-[var(--official)] text-[var(--text-primary)]">Documentation</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       
       <!-- Instalar KPM -->
       <div class="bg-[var(--bg-card)] p-6" style="border: 1px solid var(--border);">
@@ -72,6 +72,17 @@ import categories from '../data/categories.json';
         <div class="relative group">
           <pre class="p-4 pr-16 overflow-x-auto text-sm" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ rm ~/.local/bin/&lt;app_name&gt;</code></pre>
           <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd="rm ~/.local/bin/<app_name>">Copy</button>
+        </div>
+      </div>
+
+      <!-- Instalar de terceros -->
+      <div class="bg-[var(--bg-card)] p-6" style="border: 1px solid var(--border);">
+        <h3 class="text-lg font-medium mb-3 text-[var(--text-primary)]">Install 3rd-party GitHub apps</h3>
+        <p class="text-sm text-[var(--text-secondary)] mb-4">You can use our standalone installer to fetch and install binary releases from any public GitHub repository.</p>
+        
+        <div class="relative group mb-3">
+          <pre class="p-4 pr-16 overflow-x-auto text-sm whitespace-pre-wrap break-all" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>$ curl -fsSL https://raw.githubusercontent.com/ezequielgk/kore.sh/main/public/get | bash -s -- --pkg "&lt;name&gt;" --url "https://github.com/&lt;owner&gt;/&lt;repo&gt;" --format "tarball"</code></pre>
+          <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd='curl -fsSL https://raw.githubusercontent.com/ezequielgk/kore.sh/main/public/get | bash -s -- --pkg "<name>" --url "https://github.com/<owner>/<repo>" --format "tarball"'>Copy</button>
         </div>
       </div>
 
