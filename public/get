@@ -27,7 +27,6 @@ CAN_PROMPT=false
 if [ -t 0 ]; then
   CAN_PROMPT=true
 elif [ -c /dev/tty ] && ( : < /dev/tty ) 2>/dev/null; then
-  exec < /dev/tty
   CAN_PROMPT=true
 fi
 
@@ -62,7 +61,7 @@ if [ -d "$KPM_DATA/install/$PKG" ]; then
           echo "Invalid option. Try again."
           ;;
       esac
-    done
+    done < /dev/tty
   else
     echo "⚠ '$PKG' is already installed."
     echo "Run interactively to manage it."
@@ -167,7 +166,7 @@ if [ -z "$DOWNLOAD_URL" ] && \
         else
           echo "Invalid option. Try again."
         fi
-      done
+      done < /dev/tty
     else
       TAG="$(echo "$API_RESP" | grep '"tag_name"' \
         | head -1 | sed 's/.*": "\(.*\)".*/\1/' || true)"
@@ -259,7 +258,7 @@ elif [ "$CAN_PROMPT" = true ]; then
     else
       echo "Invalid option. Try again."
     fi
-  done
+  done < /dev/tty
 else
   # Fallback a automático si no es interactivo
   EXEC="${EXEC_ARRAY[0]}"
@@ -286,7 +285,7 @@ fi
 if [ "$CAN_PROMPT" = true ]; then
   echo ""
   echo "Do you want to create a desktop entry (app launcher) for $PKG? (y/n)"
-  read -r -n 1 ans
+  read -r -n 1 ans < /dev/tty
   echo ""
   if [[ "$ans" =~ ^[Yy]$ ]]; then
     mkdir -p "$APPS_DIR"
