@@ -95,9 +95,9 @@ import categories from '../data/categories.json';
         return `
           <a href="/packages/${p.slug}" class="block h-full transition-colors duration-200 bg-[var(--bg-card)] p-4" style="border: 1px solid var(--border);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
             <div class="flex items-start gap-4 mb-3">
-              <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
+               <div class="flex-shrink-0 flex items-center justify-center overflow-hidden">
                  <img src="${p.icon_url}" 
-                     onerror="this.src='/icon/kore-logo.svg'"
+                     onerror="this.src='/icon/kore-pkg.svg'"
                      width="36" height="36" alt="${p.name}" class="app-icon" style="width: 36px; height: 36px;" loading="lazy" />
               </div>
               <div class="flex-grow min-w-0">

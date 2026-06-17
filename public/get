@@ -13,18 +13,68 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$PKG" ] || [ -z "$URL" ]; then
-  echo "Uso: curl -fsSL <url>/get | sh -s -- --pkg <name> --url <url> --format <fmt>"
+  echo "Usage: curl -fsSL <url>/get | sh -s -- --pkg <name> --url <url> --format <fmt>"
   exit 1
 fi
 
 ARCH="$(uname -m)"
 KPM_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/kpm"
 KPM_BIN="${HOME}/.local/bin"
+APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+
+# Check if we can read from the terminal
+CAN_PROMPT=false
+if [ -t 0 ]; then
+  CAN_PROMPT=true
+elif [ -c /dev/tty ] && ( : < /dev/tty ) 2>/dev/null; then
+  exec < /dev/tty
+  CAN_PROMPT=true
+fi
+
+if [ -d "$KPM_DATA/install/$PKG" ]; then
+  if [ "$CAN_PROMPT" = true ]; then
+    echo "⚠ '$PKG' is already installed."
+    echo "What do you want to do?"
+    PS3="Select an option: "
+    options=("Reinstall/Update" "Uninstall" "Exit")
+    select opt in "${options[@]}"; do
+      case $opt in
+        "Reinstall/Update")
+          echo "Proceeding with update..."
+          break
+          ;;
+        "Uninstall")
+          echo "Uninstalling '$PKG'..."
+          rm -rf "$KPM_DATA/install/$PKG"
+          rm -f "$KPM_BIN/$PKG"
+          rm -f "$APPS_DIR/$PKG.desktop"
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database "$APPS_DIR"
+          fi
+          echo "✓ '$PKG' uninstalled successfully."
+          exit 0
+          ;;
+        "Exit")
+          echo "Operation canceled."
+          exit 0
+          ;;
+        *)
+          echo "Invalid option. Try again."
+          ;;
+      esac
+    done
+  else
+    echo "⚠ '$PKG' is already installed."
+    echo "Run interactively to manage it."
+    exit 1
+  fi
+fi
+
 TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-echo "→ Instalando '$PKG'..."
+echo "→ Installing '$PKG'..."
 
 # Resolver URL de descarga
 DOWNLOAD_URL=""
@@ -46,7 +96,7 @@ if [ -z "$DOWNLOAD_URL" ] && \
     AUTH_HEADER="-H \"Authorization: Bearer $GITHUB_TOKEN\""
   fi
   
-  echo "→ Consultando GitHub releases para $REPO..."
+  echo "→ Fetching GitHub releases for $REPO..."
   
   API_RESP="$(curl -fsSL \
     -H "Accept: application/vnd.github+json" \
@@ -56,34 +106,77 @@ if [ -z "$DOWNLOAD_URL" ] && \
   
   # Detectar rate limit
   if echo "$API_RESP" | grep -q "rate limit\|API rate"; then
-    echo "✗ GitHub API rate limit. Configurá: export GITHUB_TOKEN=tu_token"
+    echo "✗ GitHub API rate limit reached. Set: export GITHUB_TOKEN=your_token"
     exit 1
   fi
   
   # Detectar repo no encontrado
   if echo "$API_RESP" | grep -q '"Not Found"'; then
-    echo "✗ Repositorio no encontrado: $REPO"
+    echo "✗ Repository not found: $REPO"
     exit 1
   fi
   
-  # Extraer URL del asset compatible
-  DOWNLOAD_URL="$(echo "$API_RESP" \
+  # Extraer URLs de los assets compatibles
+  MATCHED_URLS="$(echo "$API_RESP" \
     | grep '"browser_download_url"' \
-    | grep -iE "linux.*(x86_64|amd64|x64)|x86_64.*linux|amd64" \
-    | grep -ivE "\.sig$|\.sha256$|\.asc$|\.txt$|musl|arm|aarch64" \
-    | head -1 \
-    | sed 's/.*": "\(.*\)".*/\1/')"
+    | grep -iE "linux.*(x86_64|amd64|x64|64)|x86_64.*linux|amd64" \
+    | grep -ivE "\.sig|\.sha|\.sha256|\.asc|\.txt|\.deb|\.ddeb|\.rpm|musl|arm|aarch64|32" || true)"
   
-  # Si no encontró asset, intentar con tag + nombre del paquete
-  if [ -z "$DOWNLOAD_URL" ]; then
-    TAG="$(echo "$API_RESP" | grep '"tag_name"' \
-      | head -1 | sed 's/.*": "\(.*\)".*/\1/')"
-    echo "⚠ No se encontró asset automático."
-    if [ -n "$TAG" ]; then
-      echo "  Última release: $TAG"
-      echo "  Revisá manualmente: https://github.com/$REPO/releases"
+  if [ -n "$MATCHED_URLS" ]; then
+    # Priorizar el formato solicitado
+    if [ "$FORMAT" = "appimage" ] && echo "$MATCHED_URLS" | grep -iq "appimage"; then
+      DOWNLOAD_URL="$(echo "$MATCHED_URLS" | grep -i "appimage" | head -1 | sed 's/.*": "\(.*\)".*/\1/')"
+    elif [ "$FORMAT" = "tarball" ] && echo "$MATCHED_URLS" | grep -iqE "\.tar|\.zip|\.tgz"; then
+      DOWNLOAD_URL="$(echo "$MATCHED_URLS" | grep -iE "\.tar|\.zip|\.tgz" | head -1 | sed 's/.*": "\(.*\)".*/\1/')"
+    else
+      # Fallback al primero de la lista
+      DOWNLOAD_URL="$(echo "$MATCHED_URLS" | head -1 | sed 's/.*": "\(.*\)".*/\1/')"
     fi
-    exit 1
+  fi
+  
+  # Si no encontró asset automático, mostrar menú interactivo
+  if [ -z "$DOWNLOAD_URL" ]; then
+    echo "⚠ No compatible asset found automatically."
+    
+    # Extraer URLs que sean posibles tarballs o AppImages
+    FILTERED_URLS="$(echo "$API_RESP" | grep '"browser_download_url"' \
+      | grep -iE "\.tar\.gz|\.tar\.xz|\.tar\.bz2|\.tgz|\.zip|\.AppImage" \
+      | grep -ivE "\.sig|\.sha|\.sha256|\.asc|\.txt" \
+      | sed 's/.*": "\(.*\)".*/\1/' || true)"
+    
+    # Validar que podamos usar la terminal para preguntar
+    if [ -n "$FILTERED_URLS" ] && [ "$CAN_PROMPT" = true ]; then
+      echo "Available options (tarballs/appimages only):"
+      
+      mapfile -t URL_ARRAY <<< "$FILTERED_URLS"
+      
+      NAME_ARRAY=()
+      for u in "${URL_ARRAY[@]}"; do
+        NAME_ARRAY+=("$(basename "$u")")
+      done
+      
+      PS3="Select a number to install (or the last one to cancel): "
+      select opt_name in "${NAME_ARRAY[@]}" "Cancel"; do
+        if [ "$opt_name" = "Cancel" ]; then
+          echo "Operation canceled."
+          exit 1
+        elif [ -n "$opt_name" ]; then
+          idx=$((REPLY - 1))
+          DOWNLOAD_URL="${URL_ARRAY[$idx]}"
+          break
+        else
+          echo "Invalid option. Try again."
+        fi
+      done
+    else
+      TAG="$(echo "$API_RESP" | grep '"tag_name"' \
+        | head -1 | sed 's/.*": "\(.*\)".*/\1/' || true)"
+      if [ -n "$TAG" ]; then
+        echo "  Latest release: $TAG"
+        echo "  Check manually: https://github.com/$REPO/releases"
+      fi
+      exit 1
+    fi
   fi
 fi
 
@@ -92,14 +185,14 @@ if [ -z "$DOWNLOAD_URL" ]; then
   DOWNLOAD_URL="$URL"
 fi
 
-echo "→ Descargando: $(basename "$DOWNLOAD_URL")..."
+echo "→ Downloading: $(basename "$DOWNLOAD_URL")..."
 FILENAME="$(basename "$DOWNLOAD_URL" | cut -d'?' -f1)"
 curl -fsSL -L --progress-bar \
   "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"
 
 # Verificar que se descargó algo
 if [ ! -s "$TMP_DIR/$FILENAME" ]; then
-  echo "✗ Descarga fallida o archivo vacío."
+  echo "✗ Download failed or empty file."
   exit 1
 fi
 
@@ -114,7 +207,8 @@ case "$FILENAME" in
     tar -xjf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
   *.zip)
     unzip -q "$TMP_DIR/$FILENAME" -d "$TMP_DIR/extracted" ;;
-  *.AppImage)
+  *.AppImage|*.appimage)
+    rm -rf "$KPM_DATA/install/$PKG"
     mkdir -p "$KPM_DATA/install/$PKG"
     cp "$TMP_DIR/$FILENAME" \
        "$KPM_DATA/install/$PKG/$PKG.AppImage"
@@ -122,42 +216,106 @@ case "$FILENAME" in
     mkdir -p "$KPM_BIN"
     ln -sf "$KPM_DATA/install/$PKG/$PKG.AppImage" \
            "$KPM_BIN/$PKG"
-    echo "✓ $PKG instalado → $KPM_BIN/$PKG"
+    echo "✓ $PKG installed → $KPM_BIN/$PKG"
     exit 0 ;;
   *)
     # Intentar como tarball genérico
     tar -xf "$TMP_DIR/$FILENAME" \
         -C "$TMP_DIR/extracted" 2>/dev/null || {
-      echo "✗ Formato no reconocido: $FILENAME"
+      echo "✗ Unrecognized format: $FILENAME"
       exit 1
     } ;;
 esac
 
-# Encontrar ejecutable principal
-EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
-  | grep -ivE "\.so(\.[0-9]+)*$|\.png$|\.svg$|\.desktop$|\.py$" \
-  | head -1)"
+# Encontrar ejecutables
+ALL_EXECS="$(find "$TMP_DIR/extracted" -type f -executable \
+  | grep -ivE "\.so(\.[0-9]+)*$|\.png$|\.svg$|\.desktop$|\.py$" || true)"
 
-if [ -z "$EXEC" ]; then
-  echo "✗ No se encontró ejecutable en el paquete."
+if [ -z "$ALL_EXECS" ]; then
+  echo "✗ No executable found in the package."
   exit 1
 fi
 
+mapfile -t EXEC_ARRAY <<< "$ALL_EXECS"
+
+if [ "${#EXEC_ARRAY[@]}" -eq 1 ]; then
+  EXEC="${EXEC_ARRAY[0]}"
+  echo "→ Found executable: $(basename "$EXEC")"
+elif [ "$CAN_PROMPT" = true ]; then
+  echo ""
+  echo "Multiple executables found. Please select the main app binary:"
+  exec < /dev/tty
+  
+  NAME_ARRAY=()
+  for e in "${EXEC_ARRAY[@]}"; do
+    NAME_ARRAY+=("${e#$TMP_DIR/extracted/}")
+  done
+  
+  PS3="Select the executable: "
+  select opt_exec in "${NAME_ARRAY[@]}"; do
+    if [ -n "$opt_exec" ]; then
+      idx=$((REPLY - 1))
+      EXEC="${EXEC_ARRAY[$idx]}"
+      break
+    else
+      echo "Invalid option. Try again."
+    fi
+  done
+else
+  # Fallback a automático si no es interactivo
+  EXEC="${EXEC_ARRAY[0]}"
+  echo "⚠ Non-interactive mode. Auto-selected executable: $(basename "$EXEC")"
+fi
+
 # Instalar
+rm -rf "$KPM_DATA/install/$PKG"
 mkdir -p "$KPM_DATA/install/$PKG"
 cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
-chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
+REL_EXEC="${EXEC#$TMP_DIR/extracted/}"
+chmod +x "$KPM_DATA/install/$PKG/$REL_EXEC"
 mkdir -p "$KPM_BIN"
-ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" \
+ln -sf "$KPM_DATA/install/$PKG/$REL_EXEC" \
        "$KPM_BIN/$PKG"
 
 # Avisar sobre PATH
 if ! echo ":$PATH:" | grep -q ":$KPM_BIN:"; then
   echo ""
-  echo "⚠ Agregá a tu ~/.bashrc o ~/.zshrc:"
+  echo "⚠ Add to your ~/.bashrc or ~/.zshrc:"
   echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
+if [ "$CAN_PROMPT" = true ]; then
+  echo ""
+  echo "Do you want to create a desktop entry (app launcher) for $PKG? (y/n)"
+  read -r -n 1 ans
+  echo ""
+  if [[ "$ans" =~ ^[Yy]$ ]]; then
+    mkdir -p "$APPS_DIR"
+    # Find a suitable icon
+    ICON_PATH="$(find "$KPM_DATA/install/$PKG" -type f \( -iname '*.png' -o -iname '*.svg' -o -iname '*.xpm' \) | head -1)"
+    if [ -z "$ICON_PATH" ]; then
+      ICON="utilities-terminal"
+    else
+      ICON="$ICON_PATH"
+    fi
+    
+    cat > "$APPS_DIR/$PKG.desktop" <<EOF
+[Desktop Entry]
+Name=$PKG
+Exec=$KPM_BIN/$PKG
+Icon=$ICON
+Terminal=false
+Type=Application
+Categories=Utility;
+EOF
+    
+    if command -v update-desktop-database >/dev/null 2>&1; then
+      update-desktop-database "$APPS_DIR"
+    fi
+    echo "✓ Desktop entry created."
+  fi
+fi
+
 echo ""
-echo "✓ $PKG instalado exitosamente."
-echo "  Ejecutá: $PKG"
+echo "✓ $PKG installed successfully."
+echo "  Run: $PKG"

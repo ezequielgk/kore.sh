@@ -22,10 +22,13 @@ export async function getStaticPaths() {
 }
 
 const { pkg } = Astro.props;
-const format = pkg.formats && pkg.formats.length > 0 ? pkg.formats[0] : 'tarball';
+const formats = pkg.formats && pkg.formats.length > 0 ? pkg.formats : ['tarball'];
 
 const kpmCmd = `$ kpm install ${pkg.package_name}`;
-const standaloneCmd = `$ curl -fsSL https://kore-sh.vercel.app/get | bash -s -- --pkg "${pkg.package_name}" --url "${pkg.url_template}" --format "${format}"`;
+const standaloneCmds = formats.map((fmt: string) => ({
+  name: fmt,
+  cmd: `$ curl -fsSL https://kore-sh.vercel.app/get | bash -s -- --pkg "${pkg.package_name}" --url "${pkg.url_template}" --format "${fmt}"`
+}));
 const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--community)';
 ---
 
@@ -36,9 +39,9 @@ const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--commu
     <header class="flex flex-col md:flex-row gap-6 items-start mb-10">
       <div class="flex-shrink-0 flex items-center justify-center">
         <img
-          src={pkg.icon_url || '/icon/kore-logo.svg'}
+          src={pkg.icon_url || '/icon/kore-pkg.svg'}
           alt={pkg.name}
-          onerror="this.src='/icon/kore-logo.svg'"
+          onerror="this.src='/icon/kore-pkg.svg'"
           width="56"
           height="56"
           class="app-icon"
@@ -87,13 +90,20 @@ const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--commu
               </div>
             </div>
             
-            <div id="standalone-tab" class="tab-content hidden">
-              <div class="relative group">
-                <pre class="p-4 overflow-x-auto text-sm whitespace-pre-wrap break-all" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>{standaloneCmd}</code></pre>
-                <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd={standaloneCmd.replace(/^\$ /, '')}>
-                  Copy
-                </button>
-              </div>
+            <div id="standalone-tab" class="tab-content hidden flex flex-col gap-4">
+              {standaloneCmds.map((fmtObj: any) => (
+                <div>
+                  {standaloneCmds.length > 1 && (
+                    <h4 class="text-xs font-semibold mb-2 uppercase tracking-wider" style="color: var(--text-muted);">Install {fmtObj.name}</h4>
+                  )}
+                  <div class="relative group">
+                    <pre class="p-4 overflow-x-auto text-sm whitespace-pre-wrap break-all" style="background: #0d0d0d; border: 1px solid var(--border); color: var(--accent); font-family: monospace;"><code>{fmtObj.cmd}</code></pre>
+                    <button class="copy-btn absolute top-2 right-2 px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style="background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted);" data-cmd={fmtObj.cmd.replace(/^\$ /, '')}>
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -149,7 +159,7 @@ const originColor = pkg.origin === 'official' ? 'var(--official)' : 'var(--commu
               </div>
               <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
                 <span style="color: var(--text-muted); font-size: 0.875rem;">Format</span>
-                <span class="px-2 py-0.5 text-xs" style="background: var(--bg-secondary); color: var(--text-primary);">{format}</span>
+                <span class="px-2 py-0.5 text-xs text-right" style="background: var(--bg-secondary); color: var(--text-primary);">{formats.join(', ')}</span>
               </div>
               <div class="flex items-center justify-between py-2 border-b" style="border-color: var(--border);">
                 <span style="color: var(--text-muted); font-size: 0.875rem;">Terminal</span>
