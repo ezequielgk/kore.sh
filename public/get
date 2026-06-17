@@ -1,243 +1,163 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- PART 1: INITIALIZATION & GLOBAL VARIABLES ---
-PKG=""
-URL=""
-FORMAT=""
-
-# --- PART 2: ARGUMENT PARSING & VALIDATION ---
-while [[ "$#" -gt 0 ]]; do
+# Parsear args
+PKG="" URL="" FORMAT="tarball"
+while [[ $# -gt 0 ]]; do
   case $1 in
-    --pkg) PKG="$2"; shift ;;
-    --url) URL="$2"; shift ;;
-    --format) FORMAT="$2"; shift ;;
-    *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    --pkg)    PKG="$2";    shift 2 ;;
+    --url)    URL="$2";    shift 2 ;;
+    --format) FORMAT="$2"; shift 2 ;;
+    *) shift ;;
   esac
-  shift
 done
 
-if [ -z "$PKG" ] || [ -z "$URL" ] || [ -z "$FORMAT" ]; then
-  echo "Use: curl -fsSL https://kore.sh/get | sh -s -- --pkg <package_name> --url <url> --format <format>"
+if [ -z "$PKG" ] || [ -z "$URL" ]; then
+  echo "Uso: curl -fsSL <url>/get | sh -s -- --pkg <name> --url <url> --format <fmt>"
   exit 1
 fi
 
-# --- PART 3: ENVIRONMENT CONFIGURATION & PATHS ---
 ARCH="$(uname -m)"
-OS="$(uname -s)"
 KPM_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/kpm"
 KPM_BIN="${HOME}/.local/bin"
-APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-
-# --- PART 4: EXISTING INSTALLATION CHECK & INTERACTIVE MENU ---
-if [ -d "$KPM_DATA/install/$PKG" ] || [ -f "$KPM_BIN/$PKG" ]; then
-  echo "ℹ The package '$PKG' is already installed."
-  echo "  [1] Update / Reinstall"
-  echo "  [2] Uninstall"
-  echo "  [3] Cancel"
-  
-  read -p "Select an option (1-3): " OPTION < /dev/tty
-  
-  case "$OPTION" in
-    1)
-      echo "→ Proceeding with update/reinstall..."
-      rm -rf "$KPM_DATA/install/$PKG"
-      rm -f "$KPM_BIN/$PKG"
-      rm -f "$APPS_DIR/$PKG.desktop"
-      ;;
-    2)
-      echo "→ Uninstalling '$PKG'..."
-      rm -rf "$KPM_DATA/install/$PKG"
-      rm -f "$KPM_BIN/$PKG"
-      rm -f "$APPS_DIR/$PKG.desktop"
-      echo "✓ '$PKG' uninstalled successfully."
-      exit 0
-      ;;
-    *)
-      echo "✗ Operation cancelled."
-      exit 0
-      ;;
-  esac
-fi
-
-# --- PART 5: TEMPORARY WORKSPACE SETUP ---
 TMP_DIR="$(mktemp -d)"
-
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-echo "→ Installing '$PKG' via Kore Catalog..."
+echo "→ Instalando '$PKG'..."
 
-# --- PART 6: URL RESOLUTION & DOWNLOADING ---
-if echo "$URL" | grep -q "github.com"; then
-  REPO="$(echo "$URL" | sed 's|https://github.com/||')"
-  
-  if [ "$FORMAT" = "appimage" ]; then
-    EXTS="AppImage"
-  elif [ "$FORMAT" = "tarball" ]; then
-    EXTS="tar\.gz|tar\.xz|tar\.bz2|tgz"
-  elif [ "$FORMAT" = "zip" ]; then
-    EXTS="zip"
-  else
-    EXTS=".*"
-  fi
+# Resolver URL de descarga
+DOWNLOAD_URL=""
 
-  # Apagamos temporalmente el modo estricto para evitar cierres silenciosos
-  set +euo pipefail
-
-  echo "→ Searching releases for '$PKG'..."
-  
-  # Extraemos solo las URLs de descarga de forma limpia usando el JSON de GitHub
-  URLS=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep -Eo '"browser_download_url": "[^"]+"' | cut -d'"' -f4)
-  
-  # Si la etiqueta 'latest' no existe, buscamos en el listado general
-  if [ -z "$URLS" ]; then
-    URLS=$(curl -fsSL "https://api.github.com/repos/$REPO/releases" 2>/dev/null | grep -Eo '"browser_download_url": "[^"]+"' | cut -d'"' -f4)
-  fi
-
-  # Filtro inteligente: ignoramos instaladores de Windows/macOS si estamos en Linux
-  if [ "$OS" = "Linux" ]; then
-    OS_IGNORE="macos|darwin|windows|win32|win64|\.exe$|\.msi$"
-  else
-    OS_IGNORE="linux|\.AppImage$|\.rpm$|\.deb$"
-  fi
-
-  # Filtramos por formato y descartamos otros sistemas operativos
-  FORMAT_URLS=$(echo "$URLS" | grep -iE "\.($EXTS)$" | grep -ivE "$OS_IGNORE")
-
-  # 1. Intentamos encontrar la arquitectura exacta
-  LATEST=$(echo "$FORMAT_URLS" | grep -iE "($ARCH|x86_64|linux)" | head -1)
-  
-  # 2. Alternativa: buscar cualquier archivo de Linux
-  if [ -z "$LATEST" ]; then
-    LATEST=$(echo "$FORMAT_URLS" | grep -i "linux" | head -1)
-  fi
-  
-  # 3. Alternativa final: tomar el primer archivo que coincida con el formato
-  if [ -z "$LATEST" ]; then
-    LATEST=$(echo "$FORMAT_URLS" | head -1)
-  fi
-
-  # Reactivamos el modo estricto
-  set -euo pipefail
-
-  if [ -z "$LATEST" ]; then
-    echo "✗ No compatible asset found for format '$FORMAT' and architecture '$ARCH' in GitHub Releases."
-    exit 1
-  fi
-  DOWNLOAD_URL="$LATEST"
-else
+# Si es AppImage directo
+if [ "$FORMAT" = "appimage" ] && \
+   ! echo "$URL" | grep -q "github.com/[^/]*/[^/]*$"; then
   DOWNLOAD_URL="$URL"
 fi
 
-echo "→ Fetching from $DOWNLOAD_URL..."
-FILENAME="$(basename "$DOWNLOAD_URL")"
-curl -fsSL --progress-bar "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"
-
-# --- PART 7: EXTRACTION & APPIMAGE PROCESSING ---
-mkdir -p "$TMP_DIR/extracted"
-mkdir -p "$APPS_DIR"
-
-case "$FILENAME" in
-  *.tar.gz|*.tgz) tar -xzf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
-  *.tar.xz)       tar -xJf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
-  *.tar.bz2)      tar -xjf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
-  *.zip)          unzip -q "$TMP_DIR/$FILENAME" -d "$TMP_DIR/extracted" ;;
-  *.AppImage)
-    mkdir -p "$KPM_DATA/install/$PKG"
-    cp "$TMP_DIR/$FILENAME" "$KPM_DATA/install/$PKG/$PKG.AppImage"
-    chmod +x "$KPM_DATA/install/$PKG/$PKG.AppImage"
-    
-    mkdir -p "$KPM_BIN"
-    ln -sf "$KPM_DATA/install/$PKG/$PKG.AppImage" "$KPM_BIN/$PKG"
-    
-    cat <<EOF > "$APPS_DIR/$PKG.desktop"
-[Desktop Entry]
-Name=$PKG
-Exec=$KPM_BIN/$PKG
-Icon=application-x-executable
-Type=Application
-Terminal=false
-Categories=Utility;
-EOF
-
-    echo "✓ $PKG Installation complete. Run: $PKG"
-    exit 0
-    ;;
-  *) 
-    cp "$TMP_DIR/$FILENAME" "$TMP_DIR/extracted/$PKG"
-    ;;
-esac
-
-# --- PART 8: EXECUTABLE DISCOVERY (FOR ARCHIVES) ---
-# Apagamos el pipefail temporalmente para evitar que grep mate el script si no encuentra nada
-set +euo pipefail
-
-# Buscamos archivos ejecutables, excluyendo extensiones obvias que no son la app
-EXEC="$(find "$TMP_DIR/extracted" -type f -executable 2>/dev/null \
-  | grep -v -E '\.so$|\.png$|\.svg$|\.desktop$|\.md$|\.txt$|\.html$|\.cpp$|\.h$|\.json$|\.xml$' \
-  | head -1)"
-
-# Si no encuentra nada con permisos +x, busca cualquier archivo como último recurso
-if [ -z "$EXEC" ]; then
-  EXEC="$(find "$TMP_DIR/extracted" -type f 2>/dev/null \
-    | grep -v -E '\.so$|\.png$|\.svg$|\.desktop$|\.md$|\.txt$|\.html$|\.cpp$|\.h$|\.json$|\.xml$' \
-    | head -1)"
+# Si es GitHub repo, usar API
+if [ -z "$DOWNLOAD_URL" ] && \
+   echo "$URL" | grep -qE "^https://github\.com/[^/]+/[^/]+$"; then
+  
+  REPO="$(echo "$URL" | sed 's|https://github.com/||')"
+  
+  AUTH_HEADER=""
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    AUTH_HEADER="-H \"Authorization: Bearer $GITHUB_TOKEN\""
+  fi
+  
+  echo "→ Consultando GitHub releases para $REPO..."
+  
+  API_RESP="$(curl -fsSL \
+    -H "Accept: application/vnd.github+json" \
+    ${GITHUB_TOKEN:+-H "Authorization: Bearer $GITHUB_TOKEN"} \
+    "https://api.github.com/repos/$REPO/releases/latest" \
+    2>/dev/null || echo '{}')"
+  
+  # Detectar rate limit
+  if echo "$API_RESP" | grep -q "rate limit\|API rate"; then
+    echo "✗ GitHub API rate limit. Configurá: export GITHUB_TOKEN=tu_token"
+    exit 1
+  fi
+  
+  # Detectar repo no encontrado
+  if echo "$API_RESP" | grep -q '"Not Found"'; then
+    echo "✗ Repositorio no encontrado: $REPO"
+    exit 1
+  fi
+  
+  # Extraer URL del asset compatible
+  DOWNLOAD_URL="$(echo "$API_RESP" \
+    | grep '"browser_download_url"' \
+    | grep -iE "linux.*(x86_64|amd64|x64)|x86_64.*linux|amd64" \
+    | grep -ivE "\.sig$|\.sha256$|\.asc$|\.txt$|musl|arm|aarch64" \
+    | head -1 \
+    | sed 's/.*": "\(.*\)".*/\1/')"
+  
+  # Si no encontró asset, intentar con tag + nombre del paquete
+  if [ -z "$DOWNLOAD_URL" ]; then
+    TAG="$(echo "$API_RESP" | grep '"tag_name"' \
+      | head -1 | sed 's/.*": "\(.*\)".*/\1/')"
+    echo "⚠ No se encontró asset automático."
+    if [ -n "$TAG" ]; then
+      echo "  Última release: $TAG"
+      echo "  Revisá manualmente: https://github.com/$REPO/releases"
+    fi
+    exit 1
+  fi
 fi
 
-# Reactivamos la seguridad
-set -euo pipefail
+# Si URL directa (no GitHub repo raíz)
+if [ -z "$DOWNLOAD_URL" ]; then
+  DOWNLOAD_URL="$URL"
+fi
 
-if [ -z "$EXEC" ]; then
-  echo "✗ No executable binary found in the package."
-  echo "  (This might be a source code tarball instead of a compiled app)."
+echo "→ Descargando: $(basename "$DOWNLOAD_URL")..."
+FILENAME="$(basename "$DOWNLOAD_URL" | cut -d'?' -f1)"
+curl -fsSL -L --progress-bar \
+  "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"
+
+# Verificar que se descargó algo
+if [ ! -s "$TMP_DIR/$FILENAME" ]; then
+  echo "✗ Descarga fallida o archivo vacío."
   exit 1
 fi
 
-# Calculate relative path of the executable inside the extracted folder
-REL_EXEC="${EXEC#$TMP_DIR/extracted/}"
+# Extraer
+mkdir -p "$TMP_DIR/extracted"
+case "$FILENAME" in
+  *.tar.gz|*.tgz)
+    tar -xzf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.tar.xz)
+    tar -xJf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.tar.bz2)
+    tar -xjf "$TMP_DIR/$FILENAME" -C "$TMP_DIR/extracted" ;;
+  *.zip)
+    unzip -q "$TMP_DIR/$FILENAME" -d "$TMP_DIR/extracted" ;;
+  *.AppImage)
+    mkdir -p "$KPM_DATA/install/$PKG"
+    cp "$TMP_DIR/$FILENAME" \
+       "$KPM_DATA/install/$PKG/$PKG.AppImage"
+    chmod +x "$KPM_DATA/install/$PKG/$PKG.AppImage"
+    mkdir -p "$KPM_BIN"
+    ln -sf "$KPM_DATA/install/$PKG/$PKG.AppImage" \
+           "$KPM_BIN/$PKG"
+    echo "✓ $PKG instalado → $KPM_BIN/$PKG"
+    exit 0 ;;
+  *)
+    # Intentar como tarball genérico
+    tar -xf "$TMP_DIR/$FILENAME" \
+        -C "$TMP_DIR/extracted" 2>/dev/null || {
+      echo "✗ Formato no reconocido: $FILENAME"
+      exit 1
+    } ;;
+esac
 
-# --- PART 9: FINAL INSTALLATION & DESKTOP ENTRY CONFIGURATION ---
-mkdir -p "$KPM_DATA/install/$PKG"
-# Use cp -a to preserve permissions and folder structure perfectly
-cp -a "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
+# Encontrar ejecutable principal
+EXEC="$(find "$TMP_DIR/extracted" -type f -executable \
+  | grep -ivE "\.so(\.[0-9]+)*$|\.png$|\.svg$|\.desktop$|\.py$" \
+  | head -1)"
 
-# Target executable using the exact relative path
-TARGET_EXEC="$KPM_DATA/install/$PKG/$REL_EXEC"
-chmod +x "$TARGET_EXEC"
-
-mkdir -p "$KPM_BIN"
-ln -sf "$TARGET_EXEC" "$KPM_BIN/$PKG"
-
-ICON_PATH=$(find "$KPM_DATA/install/$PKG" -type f \( -iname "*.png" -o -iname "*.svg" -o -iname "*.xpm" \) | head -1)
-
-if [ -n "$ICON_PATH" ]; then
-  DESKTOP_ICON="$ICON_PATH"
-else
-  DESKTOP_ICON="utilities-terminal"
+if [ -z "$EXEC" ]; then
+  echo "✗ No se encontró ejecutable en el paquete."
+  exit 1
 fi
 
-cat <<EOF > "$APPS_DIR/$PKG.desktop"
-[Desktop Entry]
-Name=$PKG
-Exec=$KPM_BIN/$PKG
-Icon=$DESKTOP_ICON
-Type=Application
-Terminal=false
-Categories=Utility;
-EOF
+# Instalar
+mkdir -p "$KPM_DATA/install/$PKG"
+cp -r "$TMP_DIR/extracted/." "$KPM_DATA/install/$PKG/"
+chmod +x "$KPM_DATA/install/$PKG/$(basename "$EXEC")"
+mkdir -p "$KPM_BIN"
+ln -sf "$KPM_DATA/install/$PKG/$(basename "$EXEC")" \
+       "$KPM_BIN/$PKG"
 
-# --- PART 10: POST-INSTALLATION CHECKS & CLEANUP ---
-if ! echo "$PATH" | grep -q "$KPM_BIN"; then
+# Avisar sobre PATH
+if ! echo ":$PATH:" | grep -q ":$KPM_BIN:"; then
   echo ""
-  echo "⚠ Add this to your ~/.bashrc or ~/.zshrc:"
+  echo "⚠ Agregá a tu ~/.bashrc o ~/.zshrc:"
   echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
-if command -v update-desktop-database &>/dev/null; then
-  update-desktop-database "$APPS_DIR" 2>/dev/null
-fi
-
 echo ""
-echo "✓ $PKG installed successfully (Launcher added)."
-echo "  Run: $PKG"
+echo "✓ $PKG instalado exitosamente."
+echo "  Ejecutá: $PKG"
